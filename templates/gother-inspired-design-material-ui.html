@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ferry Ticket Booking - Material UI Design</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Material UI Color Palette */
+            --primary: #1976D2;
+            --primary-light: #E3F2FD;
+            --primary-lighter: #BBDEFB;
+            --primary-dark: #1565C0;
+            --accent: #FF6F00;
+            --accent-light: #FFE0B2;
+            --accent-dark: #E65100;
+            --success: #388E3C;
+            --danger: #D32F2F;
+            --light: #FAFAFA;
+            --border: #E0E0E0;
+            --divider: #BDBDBD;
+            --text: #212121;
+            --text-light: #616161;
+            --text-lighter: #9E9E9E;
+            
+            /* Material Shadows */
+            --shadow-1: 0 1px 3px 0 rgba(0, 0, 0, 0.12), 0 1px 2px 0 rgba(0, 0, 0, 0.24);
+            --shadow-2: 0 3px 6px 0 rgba(0, 0, 0, 0.15), 0 2px 4px 0 rgba(0, 0, 0, 0.12);
+            --shadow-3: 0 10px 20px 0 rgba(0, 0, 0, 0.15), 0 3px 6px 0 rgba(0, 0, 0, 0.10);
+            --shadow-4: 0 15px 25px 0 rgba(0, 0, 0, 0.15), 0 5px 10px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--light);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.5;
+        }
+
+        /* ===== TOP HEADER ===== */
+        .top-header {
+            background: #FFFFFF;
+            border-bottom: 0.5px solid rgb(227, 228, 232);
+            padding: 12px 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .top-header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .header-left {
+            display: flex;
+            gap: 24px;
+        }
+
+        .header-left a,
+        .header-right a {
+            color: var(--text-light);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 400;
+        }
+
+        .header-left a:hover,
+        .header-right a:hover {
+            color: var(--primary);
+        }
+
+        .header-right {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .language-selector {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .language-btn {
+            padding: 4px 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .language-btn.active {
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        /* ===== MAIN HEADER ===== */
+        .main-header {
+            background: #FFFFFF;
+            padding: 12px 0;
+            border-bottom: 0.5px solid rgb(227, 228, 232);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .logo i {
+            font-size: 28px;
+            color: var(--accent);
+        }
+
+        .menu-tabs {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            margin-left: 40px;
+        }
+
+        .menu-tab {
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .menu-tab:hover {
+            color: var(--text);
+            background: rgba(25, 118, 210, 0.04);
+        }
+
+        .menu-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .menu-tab i {
+            font-size: 16px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .notify-btn,
+        .user-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--text-light);
+            font-size: 16px;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notify-btn:hover,
+        .user-btn:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .menu-toggle {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            color: var(--text);
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .menu-toggle:hover {
+            background: var(--light);
+        }
+
+        /* ===== SEARCH SECTION ===== */
+        .search-section {
+            background: #FFFFFF;
+            padding: 0;
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-1);
+        }
+
+        .search-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .trip-type-tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid var(--border);
+            padding: 0 24px;
+            margin-bottom: 0;
+        }
+
+        .trip-type-tab {
+            padding: 14px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .trip-type-tab:hover {
+            color: var(--text);
+            background: rgba(25, 118, 210, 0.04);
+        }
+
+        .trip-type-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .search-form {
+            display: grid;
+            grid-template-columns: 1.3fr 1.3fr 1fr 1fr auto;
+            gap: 12px;
+            align-items: center;
+            padding: 16px 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px 12px;
+            border: 0.5px solid rgb(227, 228, 232);
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: 'Roboto', sans-serif;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+            font-weight: 400;
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-lighter);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+            background-color: rgba(25, 118, 210, 0.01);
+        }
+
+        .form-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23616161' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 18px;
+            padding-right: 32px;
+            cursor: pointer;
+        }
+
+        .clear-btn {
+            position: absolute;
+            right: 8px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-lighter);
+            font-size: 16px;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0 4px;
+            z-index: 5;
+            border-radius: 4px;
+        }
+
+        .clear-btn:hover {
+            color: var(--primary);
+            background: rgba(25, 118, 210, 0.08);
+            transform: scale(1.05);
+        }
+
+        .form-group.route-with-icons {
+            position: relative;
+            display: flex;
+            gap: 0;
+            align-items: flex-end;
+        }
+
+        .form-group.route-with-icons .form-control {
+            flex: 1;
+            position: relative;
+        }
+
+        .form-group.route-with-icons .form-control input {
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        .swap-icon {
+            position: absolute;
+            left: 50%;
+            top: -10px;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            z-index: 10;
+            border: 3px solid white;
+            cursor: pointer;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-2);
+        }
+
+        .swap-icon:hover {
+            background: var(--primary-dark);
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: 42px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .search-btn:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #0D47A1 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .search-btn:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-1);
+        }
+
+        /* ===== PROMO BANNER ===== */
+        .promo-banner {
+            max-width: 1400px;
+            margin: 24px auto;
+            padding: 0 24px;
+        }
+
+        .promo-card {
+            background: linear-gradient(135deg, var(--primary-light) 0%, #E1F5FE 100%);
+            border-left: 4px solid var(--primary);
+            padding: 20px 24px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .promo-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .promo-label {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+
+        .promo-action {
+            display: flex;
+            gap: 12px;
+        }
+
+        .promo-action button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .promo-action .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .promo-action .btn-secondary:hover {
+            background: var(--primary-light);
+        }
+
+        .promo-action .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .promo-action .btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+        }
+
+        /* ===== SIDEBAR: FILTERS ===== */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .filter-panel {
+            background: white;
+            border-radius: 4px;
+            padding: 16px;
+            border: 0.5px solid rgb(227, 228, 232);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .filter-panel h3 {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-panel h3 i {
+            color: var(--primary);
+            font-size: 16px;
+        }
+
+        .filter-items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .filter-item:hover {
+            background: var(--light);
+        }
+
+        .filter-item input[type="checkbox"] {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+        }
+
+        .filter-item label {
+            cursor: pointer;
+            flex: 1;
+            user-select: none;
+            font-weight: 400;
+        }
+
+        .filter-item-count {
+            font-size: 12px;
+            color: var(--text-lighter);
+            margin-left: auto;
+        }
+
+        .price-range {
+            margin-top: 10px;
+        }
+
+        .price-range input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .price-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-top: 8px;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        /* ===== MAIN RESULTS ===== */
+        .results-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 16px;
+            border-radius: 4px;
+            border: 0.5px solid rgb(227, 228, 232);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .results-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .sort-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .sort-btn {
+            padding: 8px 12px;
+            background: white;
+            border: 0.5px solid rgb(227, 228, 232);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sort-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(25, 118, 210, 0.04);
+        }
+
+        .sort-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        /* ===== TRIP CARDS ===== */
+        .trip-card {
+            background: white;
+            border: 0.5px solid rgb(227, 228, 232);
+            border-radius: 4px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .trip-card:hover {
+            border-color: rgb(227, 228, 232);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .trip-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-light) 0%, #E1F5FE 100%);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--primary);
+            flex-shrink: 0;
+            border: 0.5px solid rgb(227, 228, 232);
+        }
+
+        .trip-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .trip-details-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .trip-airline {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-light);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .trip-route {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .trip-duration {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .trip-details-right {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .trip-amenity {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-light);
+            margin-bottom: 2px;
+        }
+
+        .trip-amenity i {
+            color: var(--primary);
+            font-size: 13px;
+            width: 16px;
+            text-align: center;
+        }
+
+        .trip-action {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            min-width: 140px;
+        }
+
+        .trip-price {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .trip-price-label {
+            font-size: 11px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .trip-price-value {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .book-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .book-btn:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #0D47A1 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .book-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        /* ===== EXPANDABLE SECTION ===== */
+        .trip-card {
+            flex-direction: column;
+        }
+
+        .trip-card-main {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 16px;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .trip-card.expanded .trip-card-main {
+            border-bottom: 0.5px solid rgb(227, 228, 232);
+            padding-bottom: 16px;
+        }
+
+        .trip-expand-btn {
+            position: absolute;
+            right: 16px;
+            top: 16px;
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .trip-expand-btn:hover {
+            color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .trip-card.expanded .trip-expand-btn {
+            transform: rotate(180deg);
+        }
+
+        .trip-details-expanded {
+            display: none;
+            padding-top: 16px;
+            border-top: 0.5px solid rgb(227, 228, 232);
+        }
+
+        .trip-card.expanded .trip-details-expanded {
+            display: block;
+        }
+
+        .expanded-section {
+            margin-bottom: 16px;
+        }
+
+        .expanded-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .expanded-section-title {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .expanded-section-title i {
+            color: var(--primary);
+            width: 16px;
+            text-align: center;
+        }
+
+        .expanded-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            font-size: 13px;
+        }
+
+        .expanded-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: #FAFAFA;
+            border-radius: 4px;
+        }
+
+        .expanded-item-label {
+            color: var(--text-light);
+            font-weight: 400;
+        }
+
+        .expanded-item-value {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .expanded-notes {
+            background: linear-gradient(135deg, var(--primary-light) 0%, rgba(227, 242, 253, 0.5) 100%);
+            border-left: 3px solid var(--primary);
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .expanded-notes strong {
+            color: var(--primary);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* ===== TIMELINE JOURNEY ===== */
+        .journey-timeline {
+            position: relative;
+            padding: 16px 0;
+        }
+
+        .timeline-segment {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 0.5px solid rgb(227, 228, 232);
+        }
+
+        .timeline-segment:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .timeline-time {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .timeline-hour {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .timeline-duration {
+            font-size: 11px;
+            color: var(--text-lighter);
+        }
+
+        .timeline-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--primary);
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px var(--primary);
+            margin: 4px auto 0;
+        }
+
+        .timeline-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .timeline-location {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .timeline-location i {
+            color: var(--primary);
+            width: 16px;
+            text-align: center;
+        }
+
+        .timeline-airport {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .timeline-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .timeline-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .timeline-detail-item i {
+            color: var(--primary);
+            width: 14px;
+            text-align: center;
+        }
+
+        .timeline-note {
+            background: #FFF3CD;
+            border-left: 3px solid #FF9800;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #856404;
+            margin-top: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .timeline-note i {
+            color: #FF9800;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .trip-details {
+                grid-template-columns: 1fr;
+            }
+
+            .search-form {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .search-btn {
+                grid-column: 1 / -1;
+            }
+
+            .menu-tab {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .search-form {
+                grid-template-columns: 1fr;
+                padding: 12px 20px;
+            }
+
+            .search-btn {
+                grid-column: 1;
+                width: 100%;
+            }
+
+            .trip-type-tabs {
+                padding: 0 20px;
+            }
+
+            .search-container {
+                padding: 0 20px;
+            }
+
+            .trip-card {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .trip-action {
+                flex-direction: row-reverse;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .promo-card {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                grid-template-columns: 1fr;
+                padding: 12px;
+                gap: 12px;
+            }
+
+            .promo-banner {
+                padding: 0 12px;
+                margin: 12px auto;
+            }
+
+            .header-content,
+            .top-header-content {
+                padding: 0 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .menu-tabs {
+                margin-left: 0;
+            }
+
+            .header-left {
+                gap: 12px;
+            }
+
+            .header-left a,
+            .header-right a {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- TOP HEADER -->
+    <div class="top-header">
+        <div class="top-header-content">
+            <div class="header-left">
+                <a href="#"><i class="fas fa-home"></i> หน้าแรก</a>
+                <a href="#"><i class="fas fa-question-circle"></i> ช่วยเหลือ</a>
+            </div>
+            <div class="header-right">
+                <div class="language-selector">
+                    <button class="language-btn active">ไทย</button>
+                    <span>/</span>
+                    <button class="language-btn">EN</button>
+                </div>
+                <a href="#"><i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN HEADER -->
+    <div class="main-header">
+        <div class="header-content">
+            <a href="#" class="logo"><i class="fas fa-ship"></i> FerryTicket</a>
+            <div class="menu-tabs">
+                <button class="menu-tab active"><i class="fas fa-water"></i> ตั๋วเรือ</button>
+                <button class="menu-tab"><i class="fas fa-hotel"></i> ที่พัก</button>
+                <button class="menu-tab"><i class="fas fa-car"></i> เช่ารถ</button>
+            </div>
+            <div class="header-actions">
+                <button class="notify-btn"><i class="fas fa-bell"></i></button>
+                <button class="user-btn"><i class="fas fa-user"></i></button>
+                <button class="menu-toggle"><i class="fas fa-bars"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEARCH SECTION -->
+    <div class="search-section">
+        <div class="search-container">
+            <!-- Trip Type Tabs -->
+            <div class="trip-type-tabs">
+                <button class="trip-type-tab active"><i class="fas fa-exchange-alt"></i> ไป-กลับ</button>
+                <button class="trip-type-tab"><i class="fas fa-arrow-right"></i> เที่ยวเดียว</button>
+            </div>
+
+            <form class="search-form">
+                <!-- From Location -->
+                <div class="form-group">
+                    <label>ต้นทาง</label>
+                    <div class="form-group-wrapper">
+                        <input type="text" placeholder="กรุงเทพ (BKKA)" value="กรุงเทพ (BKKA)" readonly style="cursor: pointer;">
+                        <button type="button" class="clear-btn"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+
+                <!-- To Location -->
+                <div class="form-group">
+                    <label>ปลายทาง</label>
+                    <div class="form-group-wrapper" style="position: relative;">
+                        <input type="text" placeholder="ไต้เหวี่ย (TYOA)" value="ไต้เหวี่ย (TYOA)" readonly style="cursor: pointer;">
+                        <button type="button" class="clear-btn"><i class="fas fa-times"></i></button>
+                        <div class="swap-icon" title="สลับทิศทาง"><i class="fas fa-exchange-alt"></i></div>
+                    </div>
+                </div>
+
+                <!-- Departure Date -->
+                <div class="form-group">
+                    <label>วันไปของเดินทาง</label>
+                    <input type="date" value="2026-05-01">
+                </div>
+
+                <!-- Return Date -->
+                <div class="form-group">
+                    <label>วันกลับของเดินทาง</label>
+                    <input type="date" value="2026-05-04">
+                </div>
+
+                <!-- Search Button -->
+                <button type="submit" class="search-btn" style="margin-top: 20px;">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PROMO BANNER -->
+    <div class="promo-banner">
+        <div class="promo-card">
+            <div>
+                <div class="promo-label">เลือกเรือที่ชอบ วางแผน</div>
+                <div class="promo-text"><i class="fas fa-star"></i> ราคาดีที่สุด บน ferryticket.com</div>
+            </div>
+            <div class="promo-action">
+                <button class="btn-secondary">ดูรายละเอียด</button>
+                <button class="btn-primary">ยืนยันการจอง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <!-- SIDEBAR: FILTERS -->
+        <div class="sidebar">
+            <div class="filter-panel">
+                <h3><i class="fas fa-tag"></i> ราคา</h3>
+                <div class="price-range">
+                    <input type="range" min="0" max="2000" value="1200" style="width: 100%;">
+                    <div class="price-display">
+                        <span>฿0</span>
+                        <span>฿1,200</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-panel">
+                <h3><i class="fas fa-ship"></i> ประเภทเรือ</h3>
+                <div class="filter-items">
+                    <div class="filter-item">
+                        <input type="checkbox" id="ferry1" checked>
+                        <label for="ferry1">Speed Ferry Premium</label>
+                        <span class="filter-item-count">7</span>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="ferry2" checked>
+                        <label for="ferry2">Comfort Ferry</label>
+                        <span class="filter-item-count">5</span>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="ferry3">
+                        <label for="ferry3">Economy Express</label>
+                        <span class="filter-item-count">3</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-panel">
+                <h3><i class="fas fa-clock"></i> เวลาออกเดินทาง</h3>
+                <div class="filter-items">
+                    <div class="filter-item">
+                        <input type="checkbox" id="time1" checked>
+                        <label for="time1">เช้า (06:00 - 12:00)</label>
+                        <span class="filter-item-count">8</span>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="time2">
+                        <label for="time2">บ่าย (12:00 - 18:00)</label>
+                        <span class="filter-item-count">4</span>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="time3">
+                        <label for="time3">เย็น (18:00 - 23:59)</label>
+                        <span class="filter-item-count">2</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-panel">
+                <h3><i class="fas fa-wifi"></i> สิ่งอำนวยความสะดวก</h3>
+                <div class="filter-items">
+                    <div class="filter-item">
+                        <input type="checkbox" id="amenity1" checked>
+                        <label for="amenity1">WiFi</label>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="amenity2" checked>
+                        <label for="amenity2">อาหารและเครื่องดื่ม</label>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="amenity3">
+                        <label for="amenity3">ห้องน้ำ VIP</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTS SECTION -->
+        <div class="results-section">
+            <div class="results-header">
+                <div class="results-title">
+                    <i class="fas fa-list"></i> ผลการค้นหา (12 ตั๋ว)
+                </div>
+                <div class="sort-controls">
+                    <span>เรียงตาม:</span>
+                    <button class="sort-btn active">เร็วสุด</button>
+                    <button class="sort-btn">ราคาน้อย</button>
+                    <button class="sort-btn">เที่ยวนานสุด</button>
+                </div>
+            </div>
+
+            <!-- Trip Card 1 -->
+            <div class="trip-card" style="position: relative;">
+                <button class="trip-expand-btn"><i class="fas fa-chevron-down"></i></button>
+                <div class="trip-card-main">
+                    <div class="trip-logo">SF</div>
+                    <div class="trip-details">
+                        <div class="trip-details-left">
+                            <div class="trip-airline">⭐ Speed Ferry Premium</div>
+                            <div class="trip-route">
+                                11:10
+                                <i class="fas fa-arrow-right"></i>
+                                15:45
+                            </div>
+                            <div class="trip-duration">4 ชั่วโมง 35 นาที • 45 ที่ว่าง</div>
+                        </div>
+                        <div class="trip-details-right">
+                            <div class="trip-amenity"><i class="fas fa-wifi"></i> WiFi</div>
+                            <div class="trip-amenity"><i class="fas fa-utensils"></i> อาหารและเครื่องดื่ม</div>
+                            <div class="trip-amenity"><i class="fas fa-check-double"></i> สิ่งอำนวยความสะดวก</div>
+                        </div>
+                    </div>
+                    <div class="trip-action">
+                        <div class="trip-price">
+                            <div class="trip-price-label">ราคาต่อคน</div>
+                            <div class="trip-price-value">฿850</div>
+                        </div>
+                        <button class="book-btn"><i class="fas fa-shopping-cart"></i> เลือก</button>
+                    </div>
+                </div>
+                <div class="trip-details-expanded">
+                    <div class="expanded-section">
+                        <div class="expanded-section-title"><i class="fas fa-route"></i> เส้นทางการเดินทาง</div>
+                        <div class="journey-timeline">
+                            <div class="timeline-segment">
+                                <div class="timeline-time">
+                                    <div class="timeline-hour">11:10</div>
+                                    <div class="timeline-dot"></div>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-location"><i class="fas fa-anchor"></i> กรุงเทพ</div>
+                                    <div class="timeline-airport">ท่าเทียบเรือกรุงเทพ (BKK)</div>
+                                    <div class="timeline-details">
+                                        <div class="timeline-detail-item"><i class="fas fa-door-open"></i> Gate 5</div>
+                                        <div class="timeline-detail-item"><i class="fas fa-info-circle"></i> Check-in 30 นาที</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-segment">
+                                <div class="timeline-time">
+                                    <div class="timeline-hour">4h 35m</div>
+                                </div>
+                                <div class="timeline-content">
+                                    <div style="font-size: 12px; color: var(--text-lighter); text-align: center;">⟶ เดินทาง</div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-segment">
+                                <div class="timeline-time">
+                                    <div class="timeline-hour">15:45</div>
+                                    <div class="timeline-dot"></div>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-location"><i class="fas fa-anchor"></i> ไต้เหวี่ย</div>
+                                    <div class="timeline-airport">ท่าเทียบเรือไต้เหวี่ย (TYOA)</div>
+                                    <div class="timeline-details">
+                                        <div class="timeline-detail-item"><i class="fas fa-door-open"></i> Gate 2</div>
+                                        <div class="timeline-detail-item"><i class="fas fa-clock"></i> Check-out 15 นาที</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expanded-section">
+                        <div class="expanded-section-title"><i class="fas fa-list-check"></i> รายละเอียดบริการ</div>
+                        <div class="expanded-item">
+                            <span class="expanded-item-label">ที่นั่ง</span>
+                            <span class="expanded-item-value">เก้าอี้หรูหราพร้อม USB Charger</span>
+                        </div>
+                        <div class="expanded-item">
+                            <span class="expanded-item-label">ห้องน้ำ</span>
+                            <span class="expanded-item-value">ห้องน้ำ VIP พร้อมน้ำหอม</span>
+                        </div>
+                        <div class="expanded-item">
+                            <span class="expanded-item-label">ที่เก็บสัมภาระ</span>
+                            <span class="expanded-item-value">ที่ใต้เก้าอี้ + ห้องเก็บสัมภาระ</span>
+                        </div>
+                    </div>
+                    <div class="expanded-section">
+                        <div class="expanded-section-title"><i class="fas fa-receipt"></i> สรุปราคา</div>
+                        <div class="expanded-item">
+                            <span class="expanded-item-label">ราคาตั๋วต่อคน</span>
+                            <span class="expanded-item-value" style="color: var(--accent);">฿850</span>
+                        </div>
+                        <div class="expanded-item">
+                            <span class="expanded-item-label">ค่าธรรมเนียมการประชวย</span>
+                            <span class="expanded-item-value">฿50</span>
+                        </div>
+                        <div class="expanded-item">
+                            <span class="expanded-item-label">ค่าประกันภัย (ไม่บังคับ)</span>
+                            <span class="expanded-item-value">฿30</span>
+                        </div>
+                    </div>
+                    <div class="expanded-section">
+                        <div class="expanded-notes">
+                            <strong><i class="fas fa-info-circle"></i> เงื่อนไขการจอง</strong>
+                            • เติมอ่างเก่าลเรือก่อนเดินทาง 30 นาที • ไม่อนุญาตให้ยกเลิกบัตรผ่านศูนย์รับสอบ • สามารถเปลี่ยนเที่ยวบินได้โดยไม่มีค่าใช้งาน
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trip Card 2 -->
+            <div class="trip-card" style="position: relative;">
+                <button class="trip-expand-btn"><i class="fas fa-chevron-down"></i></button>
+                <div class="trip-card-main">
+                    <div class="trip-logo" style="background: linear-gradient(135deg, #FFE0B2 0%, var(--accent-light) 100%); color: var(--accent);">CF</div>
+                    <div class="trip-details">
+                        <div class="trip-details-left">
+                            <div class="trip-airline">Comfort Ferry</div>
+                            <div class="trip-route">
+                                08:55
+                                <i class="fas fa-arrow-right"></i>
+                                13:45
+                            </div>
+                            <div class="trip-duration">4 ชั่วโมง 50 นาที • 78 ที่ว่าง</div>
+                        </div>
+                        <div class="trip-details-right">
+                            <div class="trip-amenity"><i class="fas fa-utensils"></i> อาหารและเครื่องดื่ม</div>
+                            <div class="trip-amenity"><i class="fas fa-couch"></i> ที่นั่งสบาย</div>
+                            <div class="trip-amenity"><i class="fas fa-check-double"></i> บริการที่ดี</div>
+                        </div>
+                    </div>
+                    <div class="trip-action">
+                        <div class="trip-price">
+                            <div class="trip-price-label">ราคาต่อคน</div>
+                            <div class="trip-price-value">฿650</div>
+                        </div>
+                        <button class="book-btn" style="background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);"><i class="fas fa-check"></i> เลือกแล้ว</button>
+                    </div>
+                </div>
+                <div class="trip-details-expanded">
+                    <div class="expanded-section">
+                        <div class="expanded-section-title"><i class="fas fa-route"></i> เส้นทางการเดินทาง</div>
+                        <div class="journey-timeline">
+                            <div class="timeline-segment">
+                                <div class="timeline-time">
+                                    <div class="timeline-hour">08:55</div>
+                                    <div class="timeline-dot"></div>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-location"><i class="fas fa-anchor"></i> กรุงเทพ</div>
+                                    <div class="timeline-airport">ท่าเทียบเรือกรุงเทพ (BKK)</div>
+                                    <div class="timeline-details">
+                                        <div class="timeline-detail-item"><i class="fas fa-door-open"></i> Gate 3</div>
+                                        <div class="timeline-detail-item"><i class="fas fa-info-circle"></i> Check-in 45 นาที</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-segment">
+                                <div class="timeline-time">
+                                    <div class="timeline-hour">4h 50m</div>
+                                </div>
+                                <div class="timeline-content">
+                                    <div style="font-size: 12px; color: var(--text-lighter); text-align: center;">⟶ เดินทาง</div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-segment">
+                                <div class="timeline-time">
+                                    <div class="timeline-hour">13:45</div>
+                                    <div class="timeline-dot"></div>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-location"><i class="fas fa-anchor"></i> ไต้เหวี่ย</div>
+                                    <div class="timeline-airport">ท่าเทียบเรือไต้เหวี่ย (TYOA)</div>
+                                    <div class="timeline-details">
+                                        <div class="timeline-detail-item"><i class="fas fa-door-open"></i> Gate 1</div>
+                                        <div class="timeline-detail-item"><i class="fas fa-clock"></i> Check-out 20 นาที</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expanded-section">
+                        <div class="expanded-section-title"><i class="fas fa-list-check"></i> รายละเอียดบริการ</div>
+                        <div class="expanded-item">
+                            <span class="expanded-item-label">ที่นั่ง</span>
+                            <span class="expanded-item-value">เก้าอี้นอนตัวได้พร้อม Entertainment</span>
+                        </div>
+                        <div class="expanded-item">
+                            <span class="expanded-item-label">ห้องน้ำ</span>
+                            <span class="expanded-item-value">ห้องน้ำ Standard 2 ห้อง</span>
+                        </div>
+                        <div class="expanded-item">
+                            <span class="expanded-item-label">อาหาร</span>
+                            <span class="expanded-item-value">มื้อกลางวันและอาหารว่าง</span>
+                        </div>
+                    </div>
+                    <div class="expanded-section">
+                        <div class="expanded-section-title"><i class="fas fa-receipt"></i> สรุปราคา</div>
+                        <div class="expanded-item">
+                            <span class="expanded-item-label">ราคาตั๋วต่อคน</span>
+                            <span class="expanded-item-value" style="color: var(--accent);">฿650</span>
+                        </div>
+                        <div class="expanded-item">
+                            <span class="expanded-item-label">ค่าธรรมเนียมการประชวย</span>
+                            <span class="expanded-item-value">฿40</span>
+                        </div>
+                    </div>
+                    <div class="expanded-section">
+                        <div class="expanded-notes">
+                            <strong><i class="fas fa-info-circle"></i> เงื่อนไขการจอง</strong>
+                            • เติมน้ำเรือก่อนเดินทาง 45 นาที • สามารถยกเลิกจองได้ 24 ชั่วโมงก่อน • เปลี่ยนเที่ยวได้ฟรีสำหรับการจอง
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trip Card 3 -->
+            <div class="trip-card" style="position: relative;">
+                <button class="trip-expand-btn"><i class="fas fa-chevron-down"></i></button>
+                <div class="trip-card-main">
+                    <div class="trip-logo" style="background: linear-gradient(135deg, #E0F2FF 0%, #FFF0E0 100%); color: var(--accent);">EE</div>
+                    <div class="trip-details">
+                        <div class="trip-details-left">
+                            <div class="trip-airline">Economy Express</div>
+                            <div class="trip-route">
+                                18:55
+                                <i class="fas fa-arrow-right"></i>
+                                22:05
+                            </div>
+                            <div class="trip-duration">3 ชั่วโมง 10 นาที • 5 ที่ว่าง</div>
+                        </div>
+                        <div class="trip-details-right">
+                            <div class="trip-amenity"><i class="fas fa-toilet"></i> ห้องน้ำ</div>
+                            <div class="trip-amenity"><i class="fas fa-user-check"></i> พนักงานช่วยเหลือ</div>
+                        </div>
+                    </div>
+                    <div class="trip-action">
+                        <div class="trip-price">
+                            <div class="trip-price-label">ราคาต่อคน</div>
+                            <div class="trip-price-value">฿450</div>
+                        </div>
+                        <button class="book-btn"><i class="fas fa-shopping-cart"></i> เลือก</button>
+                    </div>
+                </div>
+                <div class="trip-details-expanded">
+                    <div class="expanded-section">
+                        <div class="expanded-section-title"><i class="fas fa-route"></i> เส้นทางการเดินทาง</div>
+                        <div class="journey-timeline">
+                            <div class="timeline-segment">
+                                <div class="timeline-time">
+                                    <div class="timeline-hour">18:55</div>
+                                    <div class="timeline-dot"></div>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-location"><i class="fas fa-anchor"></i> กรุงเทพ</div>
+                                    <div class="timeline-airport">ท่าเทียบเรือกรุงเทพ (BKK)</div>
+                                    <div class="timeline-details">
+                                        <div class="timeline-detail-item"><i class="fas fa-door-open"></i> Gate 7</div>
+                                        <div class="timeline-detail-item"><i class="fas fa-info-circle"></i> Check-in 1 ชั่วโมง</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-segment">
+                                <div class="timeline-time">
+                                    <div class="timeline-hour">3h 10m</div>
+                                </div>
+                                <div class="timeline-content">
+                                    <div style="font-size: 12px; color: var(--text-lighter); text-align: center;">⟶ เดินทาง</div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-segment">
+                                <div class="timeline-time">
+                                    <div class="timeline-hour">22:05</div>
+                                    <div class="timeline-dot"></div>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-location"><i class="fas fa-anchor"></i> ไต้เหวี่ย</div>
+                                    <div class="timeline-airport">ท่าเทียบเรือไต้เหวี่ย (TYOA)</div>
+                                    <div class="timeline-details">
+                                        <div class="timeline-detail-item"><i class="fas fa-door-open"></i> Gate 4</div>
+                                        <div class="timeline-detail-item"><i class="fas fa-clock"></i> Check-out 30 นาที</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expanded-section">
+                        <div class="expanded-section-title"><i class="fas fa-list-check"></i> รายละเอียดบริการ</div>
+                        <div class="expanded-item">
+                            <span class="expanded-item-label">ที่นั่ง</span>
+                            <span class="expanded-item-value">เก้าอี้มาตรฐาน</span>
+                        </div>
+                        <div class="expanded-item">
+                            <span class="expanded-item-label">ห้องน้ำ</span>
+                            <span class="expanded-item-value">ห้องน้ำ 1 ห้อง</span>
+                        </div>
+                    </div>
+                    <div class="expanded-section">
+                        <div class="expanded-section-title"><i class="fas fa-receipt"></i> สรุปราคา</div>
+                        <div class="expanded-item">
+                            <span class="expanded-item-label">ราคาตั๋วต่อคน</span>
+                            <span class="expanded-item-value" style="color: var(--accent);">฿450</span>
+                        </div>
+                        <div class="expanded-item">
+                            <span class="expanded-item-label">ค่าธรรมเนียมการประชวย</span>
+                            <span class="expanded-item-value">฿30</span>
+                        </div>
+                    </div>
+                    <div class="expanded-section">
+                        <div class="expanded-notes">
+                            <strong><i class="fas fa-info-circle"></i> เงื่อนไขการจอง</strong>
+                            • เติมอ่างเก่าลเรือก่อนเดินทาง 1 ชั่วโมง • มีจำนวนที่นั่งไม่มาก • ห้องน้ำร่วมกัน
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Trip type tabs
+        document.querySelectorAll('.trip-type-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.trip-type-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Swap button functionality
+        document.querySelector('.swap-icon').addEventListener('click', function(e) {
+            e.preventDefault();
+            const fromInput = document.querySelector('input[placeholder="กรุงเทพ (BKKA)"]');
+            const toInput = document.querySelector('input[placeholder="ไต้เหวี่ย (TYOA)"]');
+            const temp = fromInput.value;
+            fromInput.value = toInput.value;
+            toInput.value = temp;
+        });
+
+        // Clear buttons
+        document.querySelectorAll('.clear-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const input = this.previousElementSibling;
+                input.value = '';
+                input.focus();
+            });
+        });
+
+        // Sort button functionality
+        document.querySelectorAll('.sort-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Book button functionality
+        document.querySelectorAll('.book-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.book-btn').forEach(b => {
+                    b.style.background = 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)';
+                    b.innerHTML = '<i class="fas fa-shopping-cart"></i> เลือก';
+                });
+                this.style.background = 'linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%)';
+                this.innerHTML = '<i class="fas fa-check"></i> เลือกแล้ว';
+            });
+        });
+
+        // Trip card expand/collapse functionality
+        document.querySelectorAll('.trip-expand-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const card = this.closest('.trip-card');
+                card.classList.toggle('expanded');
+            });
+        });
+
+        // Also allow clicking on the card main area to expand
+        document.querySelectorAll('.trip-card-main').forEach(main => {
+            main.addEventListener('click', function() {
+                const card = this.closest('.trip-card');
+                card.classList.toggle('expanded');
+            });
+        });
+    </script>
+</body>
+</html>

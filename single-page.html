@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ferry Ticket Booking System</title>
+  
+  <!-- Vue 3 from CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <!-- Axios for API calls -->
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    #ferry-booking-app {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .header {
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .header h1 {
+      margin: 0 0 1rem 0;
+      font-size: 2rem;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .nav button {
+      color: #fff;
+      background: none;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      font-size: 1rem;
+    }
+
+    .nav button:hover,
+    .nav button.active {
+      background-color: #667eea;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 2rem;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .footer {
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      text-align: center;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .footer p {
+      margin: 0;
+    }
+
+    /* Home Page */
+    .home-view {
+      color: white;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 3rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      margin-bottom: 3rem;
+    }
+
+    .hero h2 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 2rem;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .btn-primary {
+      background-color: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #5568d3;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background-color: #48bb78;
+      color: white;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .btn-secondary:hover {
+      background-color: #38a169;
+    }
+
+    .btn-danger {
+      background-color: #f56565;
+      color: white;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .btn-danger:hover {
+      background-color: #e53e3e;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 8px;
+      text-align: center;
+      transition: transform 0.3s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .feature-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-card h3 {
+      margin-bottom: 0.5rem;
+    }
+
+    /* Search Page */
+    .search-view {
+      color: white;
+    }
+
+    .search-form {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+      color: white;
+    }
+
+    .form-group input {
+      padding: 0.75rem;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    .loading,
+    .no-results {
+      text-align: center;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: white;
+    }
+
+    .tickets-list h3 {
+      margin-bottom: 1.5rem;
+      color: white;
+    }
+
+    .ticket-item {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .ticket-info {
+      flex: 1;
+      min-width: 200px;
+      color: white;
+    }
+
+    .ticket-info h4,
+    .ticket-info p {
+      margin: 0.5rem 0;
+    }
+
+    /* Cart Page */
+    .cart-view {
+      color: white;
+    }
+
+    .cart-items {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .cart-item {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .item-info h4,
+    .item-info p {
+      margin: 0.5rem 0;
+    }
+
+    .price {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .btn-block {
+      width: 100%;
+      padding: 1rem;
+    }
+
+    .cart-summary {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 8px;
+      max-width: 400px;
+    }
+
+    .cart-summary h3 {
+      margin-bottom: 1.5rem;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .summary-row.total {
+      font-weight: bold;
+      font-size: 1.2rem;
+      border: none;
+      margin-top: 1rem;
+    }
+
+    .empty-cart {
+      text-align: center;
+      padding: 3rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+    }
+
+    .empty-cart p {
+      margin-bottom: 2rem;
+      font-size: 1.2rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .search-form {
+        grid-template-columns: 1fr;
+      }
+
+      .features {
+        grid-template-columns: 1fr;
+      }
+
+      .ticket-item,
+      .cart-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .btn {
+        margin-top: 1rem;
+      }
+
+      .hero h2 {
+        font-size: 1.8rem;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+      }
+    }
+
+    /* Hide/Show views */
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="ferry-booking-app">
+    <div class="app-container">
+      <header class="header">
+        <h1>🚢 Ferry Ticket Booking</h1>
+        <nav class="nav">
+          <button @click="currentView = 'home'" :class="{ active: currentView === 'home' }">
+            Home
+          </button>
+          <button @click="currentView = 'search'" :class="{ active: currentView === 'search' }">
+            Search Tickets
+          </button>
+          <button @click="currentView = 'cart'" :class="{ active: currentView === 'cart' }">
+            Cart ({{ cart.length }})
+          </button>
+        </nav>
+      </header>
+
+      <main class="main-content">
+        <!-- Home View -->
+        <div v-show="currentView === 'home'" class="home-view">
+          <div class="hero">
+            <h2>Welcome to Ferry Ticket Booking</h2>
+            <p>Book your ferry tickets easily and quickly</p>
+            <button @click="currentView = 'search'" class="btn btn-primary">
+              Start Booking Now
+            </button>
+          </div>
+
+          <section class="features">
+            <div class="feature-card">
+              <div class="feature-icon">🔍</div>
+              <h3>Easy Search</h3>
+              <p>Find available ferry tickets in seconds</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">💳</div>
+              <h3>Secure Payment</h3>
+              <p>Safe and secure payment methods</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">🚢</div>
+              <h3>Multiple Routes</h3>
+              <p>Choose from various ferry routes</p>
+            </div>
+          </section>
+        </div>
+
+        <!-- Search View -->
+        <div v-show="currentView === 'search'" class="search-view">
+          <h2>Search Ferry Tickets</h2>
+          
+          <form @submit.prevent="handleSearch" class="search-form">
+            <div class="form-group">
+              <label for="departure">Departure Port</label>
+              <input
+                v-model="filters.departure"
+                type="text"
+                id="departure"
+                placeholder="e.g., Bangkok"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="destination">Destination Port</label>
+              <input
+                v-model="filters.destination"
+                type="text"
+                id="destination"
+                placeholder="e.g., Phuket"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="date">Departure Date</label>
+              <input
+                v-model="filters.date"
+                type="date"
+                id="date"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="passengers">Passengers</label>
+              <input
+                v-model.number="filters.passengers"
+                type="number"
+                id="passengers"
+                min="1"
+                max="10"
+              />
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="height: fit-content;">
+              Search
+            </button>
+          </form>
+
+          <div v-if="loading" class="loading">
+            🔄 Searching tickets...
+          </div>
+
+          <div v-else-if="tickets.length > 0" class="tickets-list">
+            <h3>Available Tickets</h3>
+            <div class="ticket-item" v-for="ticket in tickets" :key="ticket.id">
+              <div class="ticket-info">
+                <h4>{{ ticket.departure }} → {{ ticket.destination }}</h4>
+                <p>📅 {{ ticket.date }} at {{ ticket.time }}</p>
+                <p>⏱️ Duration: {{ ticket.duration }}</p>
+                <p class="price">💰 {{ ticket.price }} THB</p>
+              </div>
+              <button @click="addToCart(ticket)" class="btn btn-secondary">
+                Add to Cart
+              </button>
+            </div>
+          </div>
+
+          <div v-else class="no-results">
+            <p>No tickets found. Try searching with different criteria.</p>
+          </div>
+        </div>
+
+        <!-- Cart View -->
+        <div v-show="currentView === 'cart'" class="cart-view">
+          <h2>Shopping Cart</h2>
+
+          <div v-if="cart.length > 0">
+            <div class="cart-items">
+              <div class="cart-item" v-for="(item, index) in cart" :key="index">
+                <div class="item-info">
+                  <h4>{{ item.departure }} → {{ item.destination }}</h4>
+                  <p>{{ item.date }} at {{ item.time }}</p>
+                  <p class="price">{{ item.price }} THB</p>
+                </div>
+                <button @click="removeFromCart(index)" class="btn btn-danger">
+                  Remove
+                </button>
+              </div>
+            </div>
+
+            <div class="cart-summary">
+              <h3>Order Summary</h3>
+              <div class="summary-row">
+                <span>Total Items:</span>
+                <span>{{ cart.length }}</span>
+              </div>
+              <div class="summary-row">
+                <span>Unit Price:</span>
+                <span>{{ cart.reduce((sum, item) => sum + item.price, 0) }} THB</span>
+              </div>
+              <div class="summary-row total">
+                <span>Total Price:</span>
+                <span>{{ cart.reduce((sum, item) => sum + item.price, 0) }} THB</span>
+              </div>
+              <button @click="checkout" class="btn btn-primary btn-block">
+                Proceed to Checkout
+              </button>
+            </div>
+          </div>
+
+          <div v-else class="empty-cart">
+            <p>Your cart is empty</p>
+            <button @click="currentView = 'search'" class="btn btn-primary">
+              Continue Shopping
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <p>&copy; 2026 Ferry Ticket Booking System. All rights reserved.</p>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, reactive, computed } = Vue;
+
+    createApp({
+      setup() {
+        const currentView = ref('home');
+        const loading = ref(false);
+        const cart = ref([]);
+        const tickets = ref([]);
+
+        const filters = reactive({
+          departure: '',
+          destination: '',
+          date: '',
+          passengers: 1
+        });
+
+        // Configuration - Change this to your actual API URL
+        const API_BASE_URL = window.FERRY_API_URL || 'http://localhost:8000/api';
+
+        const mockTickets = [
+          {
+            id: 1,
+            departure: 'Bangkok',
+            destination: 'Phuket',
+            date: '2026-04-30',
+            time: '09:00',
+            price: 500,
+            duration: '8 hours',
+            available: 50
+          },
+          {
+            id: 2,
+            departure: 'Bangkok',
+            destination: 'Phuket',
+            date: '2026-04-30',
+            time: '14:00',
+            price: 450,
+            duration: '8 hours',
+            available: 30
+          },
+          {
+            id: 3,
+            departure: 'Bangkok',
+            destination: 'Krabi',
+            date: '2026-05-01',
+            time: '10:00',
+            price: 350,
+            duration: '4 hours',
+            available: 25
+          },
+          {
+            id: 4,
+            departure: 'Phuket',
+            destination: 'Krabi',
+            date: '2026-05-01',
+            time: '15:00',
+            price: 300,
+            duration: '3 hours',
+            available: 40
+          }
+        ];
+
+        const handleSearch = async () => {
+          loading.value = true;
+          try {
+            // Use mock data for now - uncomment below to use real API
+            let results = mockTickets;
+
+            if (filters.departure) {
+              results = results.filter(t =>
+                t.departure.toLowerCase().includes(filters.departure.toLowerCase())
+              );
+            }
+
+            if (filters.destination) {
+              results = results.filter(t =>
+                t.destination.toLowerCase().includes(filters.destination.toLowerCase())
+              );
+            }
+
+            if (filters.date) {
+              results = results.filter(t => t.date === filters.date);
+            }
+
+            tickets.value = results;
+
+            // Uncomment to use real API:
+            // const response = await axios.get(`${API_BASE_URL}/tickets/search`, {
+            //   params: filters
+            // });
+            // tickets.value = response.data;
+          } catch (error) {
+            console.error('Search error:', error);
+            alert('Error searching tickets. Please try again.');
+          } finally {
+            loading.value = false;
+          }
+        };
+
+        const addToCart = (ticket) => {
+          cart.value.push({ ...ticket });
+          alert('✅ Ticket added to cart!');
+        };
+
+        const removeFromCart = (index) => {
+          cart.value.splice(index, 1);
+        };
+
+        const checkout = () => {
+          const total = cart.value.reduce((sum, item) => sum + item.price, 0);
+          alert(`✅ Proceeding to checkout with ${cart.value.length} ticket(s)\nTotal: ${total} THB`);
+          // Here you would typically send booking data to your server
+        };
+
+        return {
+          currentView,
+          loading,
+          cart,
+          tickets,
+          filters,
+          handleSearch,
+          addToCart,
+          removeFromCart,
+          checkout
+        };
+      }
+    }).mount('#ferry-booking-app');
+
+    // Allow WordPress to configure API URL if needed:
+    // Add this before the app loads if you have a custom API:
+    // window.FERRY_API_URL = 'your-api-url-here';
+  </script>
+</body>
+</html>

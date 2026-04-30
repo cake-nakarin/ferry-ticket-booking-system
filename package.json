@@ -1,0 +1,26 @@
+{
+  "name": "ferry-ticket-booking-system",
+  "version": "1.0.0",
+  "description": "Ferry ticket booking system with Vue 3 and Node.js",
+  "type": "module",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .js,.vue"
+  },
+  "dependencies": {
+    "vue": "^3.4.0",
+    "axios": "^1.6.0",
+    "pinia": "^2.1.0",
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "vite": "^5.0.0",
+    "eslint": "^8.55.0",
+    "eslint-plugin-vue": "^9.18.1"
+  }
+}
