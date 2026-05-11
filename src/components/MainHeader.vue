@@ -16,14 +16,32 @@
         </button>
       </div>
       <div class="header-actions">
-        <button class="icon-btn"><i class="fas fa-bell"></i></button>
+        <button class="icon-btn desktop-only"><i class="fas fa-bell"></i></button>
         <button class="icon-btn cart-btn" @click="$emit('go-cart')">
           <i class="fas fa-shopping-cart"></i>
           <span v-if="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
         </button>
-        <button class="icon-btn"><i class="fas fa-user"></i></button>
-        <button class="menu-toggle"><i class="fas fa-bars"></i></button>
+        <button class="icon-btn desktop-only"><i class="fas fa-user"></i></button>
+        <button class="menu-toggle" @click="mobileMenuOpen = !mobileMenuOpen" :class="{ open: mobileMenuOpen }">
+          <i :class="mobileMenuOpen ? 'fas fa-times' : 'fas fa-bars'"></i>
+        </button>
       </div>
+    </div>
+
+    <!-- Mobile nav dropdown -->
+    <div class="mobile-nav" v-show="mobileMenuOpen">
+      <button :class="['mobile-nav-item', { active: activeTab === 'ferry' }]" @click="activeTab = 'ferry'; mobileMenuOpen = false">
+        <i class="fas fa-water"></i> {{ t('menu.ferry') }}
+      </button>
+      <button :class="['mobile-nav-item', { active: activeTab === 'hotel' }]" @click="activeTab = 'hotel'; mobileMenuOpen = false">
+        <i class="fas fa-hotel"></i> {{ t('menu.hotel') }}
+      </button>
+      <button :class="['mobile-nav-item', { active: activeTab === 'car' }]" @click="activeTab = 'car'; mobileMenuOpen = false">
+        <i class="fas fa-car"></i> {{ t('menu.car') }}
+      </button>
+      <div class="mobile-nav-divider"></div>
+      <button class="mobile-nav-item"><i class="fas fa-bell"></i> Notifications</button>
+      <button class="mobile-nav-item"><i class="fas fa-user"></i> Account</button>
     </div>
   </div>
 </template>
@@ -39,6 +57,7 @@ defineProps({
 defineEmits(['go-cart', 'go-home'])
 
 const activeTab = ref('ferry')
+const mobileMenuOpen = ref(false)
 </script>
 
 <style scoped>
@@ -175,6 +194,75 @@ const activeTab = ref('ferry')
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .header-content {
+    padding: 0 14px;
+  }
+
+  .logo {
+    font-size: 20px;
+  }
+
+  .logo i {
+    font-size: 22px;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+}
+
+/* Mobile nav dropdown */
+.mobile-nav {
+  display: none;
+  flex-direction: column;
+  border-top: 0.5px solid rgb(227, 228, 232);
+  background: #fff;
+}
+
+.mobile-nav-item {
+  padding: 14px 20px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 150ms;
+}
+
+.mobile-nav-item:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.mobile-nav-item.active {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.mobile-nav-item i {
+  width: 18px;
+  text-align: center;
+  color: var(--primary);
+}
+
+.mobile-nav-divider {
+  height: 0.5px;
+  background: rgb(227, 228, 232);
+  margin: 4px 0;
+}
+
+@media (max-width: 1024px) {
+  .mobile-nav {
+    display: flex;
   }
 }
 </style>

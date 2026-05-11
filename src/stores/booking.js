@@ -24,6 +24,11 @@ export const useBookingStore = defineStore('booking', () => {
     cartItems.value.splice(index, 1)
   }
 
+  const removeFromCartById = (id) => {
+    const index = cartItems.value.findIndex((item) => item.id === id)
+    if (index !== -1) cartItems.value.splice(index, 1)
+  }
+
   const clearCart = () => {
     cartItems.value = []
   }
@@ -39,7 +44,8 @@ export const useBookingStore = defineStore('booking', () => {
     cartCount,
     addToCart,
     removeFromCart,
+    removeFromCartById,
     clearCart,
-    updateSearchFilters
+    updateSearchFilters,
   }
 })

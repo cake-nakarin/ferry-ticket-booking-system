@@ -1,355 +1,293 @@
-# API Documentation - เอกสาร API
+# API Documentation (Frontend)
 
-## 📌 Base URL
+เอกสารนี้อธิบาย REST API จริงที่ frontend ต้องใช้จากปลั๊กอิน Boat Ticket บน WordPress
 
+## Base URL และ Namespace
+
+- Base URL: `https://<your-domain>/wp-json`
+- Namespace: `custom/v1`
+- รวมเป็น root: `https://<your-domain>/wp-json/custom/v1`
+
+## Auth และ Permission
+
+- ทุก endpoint ในเอกสารนี้เป็น public (`permission_callback = __return_true`)
+- ไม่ต้องใช้ token สำหรับการอ่านข้อมูล
+- Endpoint จอง (`POST /frontend/bookings`) ตอนนี้เป็น mock response ฝั่งเซิร์ฟเวอร์
+
+## Endpoints
+
+### 1) GET `/frontend/locations`
+
+คืนรายการ location สำหรับใช้ใน search form
+
+Query params: ไม่มี
+
+Response ตัวอย่าง:
+
+```json
+[
+  {
+    "id": "BKK",
+    "label": "Bangkok (BKK)",
+    "value": "Bangkok",
+    "postId": 123
+  }
+]
 ```
-http://your-domain.com/wp-json/ftbs/v1
-```
 
-## Authentication
+หมายเหตุ:
+- `id` คือ location code (2-6 ตัวอักษร/ตัวเลข)
+- `label` คือข้อความแสดงใน UI
+- `value` คือชื่อ location ที่ใช้ match กับ route
 
-ทุก request อาจต้อง WordPress nonce token สำหรับ POST requests
+### 2) GET `/frontend/tickets`
 
----
+ค้นหารายการตั๋วตามเงื่อนไข
 
-## 📊 Endpoints
+Query params:
 
-### 1. Search Trips (GET)
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `from` | string | No | ต้นทาง (รับได้ทั้ง `Bangkok`, `Bangkok (BKK)`, หรือ `BKK`) |
+| `to` | string | No | ปลายทาง (รูปแบบเดียวกับ `from`) |
+| `departDate` | string (`YYYY-MM-DD`) | No | วันที่เดินทาง ถ้าไม่ถูก format จะ fallback เป็นวันปัจจุบัน + 2 วัน |
+| `adults` | int | No | ส่งได้ แต่ backend ไม่ได้ใช้ในการ filter รายการ |
+| `children` | int | No | ส่งได้ แต่ backend ไม่ได้ใช้ในการ filter รายการ |
+| `childAges` | string (`comma-separated`) | No | ส่งได้ แต่ backend ไม่ได้ใช้ในการ filter รายการ |
 
-**Endpoint**: `GET /trips/search`
+Response: `Ticket[]`
 
-**Description**: ค้นหาตั๋วเรือตามเงื่อนไขที่กำหนด
+### 3) GET `/frontend/tickets/{id}`
 
-**Parameters**:
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| from_port | string | Yes | รหัสท่าเรือต้นทาง (เช่น BKK) |
-| to_port | string | Yes | รหัสท่าเรือปลายทาง (เช่น HKT) |
-| departure_date | YYYY-MM-DD | Yes | วันที่ออกเดินทาง |
-| number_of_passengers | number | Yes | จำนวนผู้โดยสาร |
-| sort_by | string | No | การเรียงลำดับ: price, time, duration |
-| page | number | No | หมายเลขหน้า (default: 1) |
+ดึงรายละเอียดตั๋วรายตัว
 
-**Response (200 OK)**:
+Path params:
+- `id`: รองรับ `tk-<productId>`, `ticket-<productId>`, หรือ `<productId>`
+
+Query params:
+- `departDate` (optional, รูปแบบ `YYYY-MM-DD`)
+
+Errors:
+- `400 btk_invalid_ticket_id`
+- `404 btk_ticket_not_found`
+
+### 4) POST `/frontend/bookings`
+
+สร้าง booking (ปัจจุบันเป็น mock)
+
+Request body:
+- JSON object รูปแบบใดก็ได้ (backend คืนกลับในฟิลด์ `data`)
+
+Response ตัวอย่าง:
+
 ```json
 {
   "success": true,
-  "data": [
-    {
-      "id": 1,
-      "ferry_name": "Speed Ferry Premium",
-      "from_port": "BKK",
-      "to_port": "HKT",
-      "departure_time": "2024-04-29T08:00:00",
-      "arrival_time": "2024-04-29T12:30:00",
-      "duration": "4h 30m",
-      "available_seats": 45,
-      "total_seats": 100,
-      "price": 850,
-      "status": "Available"
+  "bookingRef": "MOCK-1715412345",
+  "createdAt": "2026-05-11T08:00:00+00:00",
+  "data": {
+    "ticketId": "tk-101"
+  }
+}
+```
+
+### 5) GET `/frontend/packages`
+
+ค้นหา package product
+
+Query params:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `q` | string | No | ค้นหาในชื่อ package + note |
+| `location` | string | No | ค้นหาจากชื่อ location ภายใน package |
+
+Response: `Package[]`
+
+### 6) GET `/frontend/packages/{id}`
+
+ดึงรายละเอียด package รายตัว
+
+Path params:
+- `id`: รองรับ `pk-<productId>`, `ticket-<productId>`, หรือ `<productId>`
+
+Errors:
+- `400 btk_invalid_package_id`
+- `404 btk_package_not_found`
+
+### 7) GET `/frontend/bootstrap`
+
+endpoint เดียวที่คืนข้อมูลตั้งต้นทั้งหมดสำหรับหน้าแรก (แนะนำให้ frontend ใช้ endpoint นี้เป็นหลัก)
+
+Query params:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `from` | string | No | ค่า search override |
+| `to` | string | No | ค่า search override |
+| `departDate` | string (`YYYY-MM-DD`) | No | ค่า search override |
+| `tripType` | `oneway` \| `roundtrip` | No | default ตาม backend |
+| `adults` | int | No | default = 1 |
+| `children` | int | No | default = 0 |
+| `childAges` | string (`comma-separated`) | No | เช่น `5,8` |
+| `packageQ` | string | No | filter packages |
+| `packageLocation` | string | No | filter packages |
+| `includePackages` | int (`0`/`1`) | No | default = `1` |
+
+Response โครงสร้าง:
+
+```json
+{
+  "generatedAt": "2026-05-11T08:00:00+00:00",
+  "locations": [],
+  "defaultSearch": {
+    "tripType": "oneway",
+    "from": "Bangkok (BKK)",
+    "to": "Koh Samui (KSM)",
+    "departDate": "2026-05-13",
+    "returnDate": "2026-05-20",
+    "adults": 1,
+    "children": 0,
+    "childAges": []
+  },
+  "search": {
+    "tripType": "oneway",
+    "from": "Bangkok (BKK)",
+    "to": "Koh Samui (KSM)",
+    "departDate": "2026-05-13",
+    "returnDate": "2026-05-20",
+    "adults": 1,
+    "children": 0,
+    "childAges": []
+  },
+  "tickets": [],
+  "packages": []
+}
+```
+
+## Ticket Schema (สรุป)
+
+```json
+{
+  "id": "tk-101",
+  "productId": 101,
+  "from": "Bangkok",
+  "to": "Koh Samui",
+  "operator": "Lomprayah",
+  "ferryType": "High Speed Catamaran",
+  "departTime": "07:00",
+  "arriveTime": "11:30",
+  "duration": "4h 30m",
+  "seats": 45,
+  "pricing": {
+    "adult": 850,
+    "child": 600,
+    "toddler": 0
+  },
+  "amenities": ["WiFi", "Air Conditioning"],
+  "images": ["https://..."],
+  "departDate": "2026-05-13",
+  "routeType": "single",
+  "routeConnection": [
+    { "id": 201, "title": "Route A" }
+  ],
+  "routeDetails": {
+    "checkin": {
+      "minutesBefore": 30,
+      "location": "Bangkok Pier",
+      "locationId": 301
     },
+    "pickup": {
+      "location": "Hotel Pickup",
+      "locationId": 302
+    },
+    "dropoff": {
+      "location": "Nathon Pier",
+      "locationId": 303
+    }
+  },
+  "itinerary": [
     {
-      "id": 2,
-      "ferry_name": "Comfort Ferry",
-      "from_port": "BKK",
-      "to_port": "HKT",
-      "departure_time": "2024-04-29T10:00:00",
-      "arrival_time": "2024-04-29T14:45:00",
-      "duration": "4h 45m",
-      "available_seats": 78,
-      "total_seats": 150,
-      "price": 650,
-      "status": "Available"
+      "key": "before_departure",
+      "minutes": 45,
+      "details": "Arrive at check-in counter"
     }
   ],
-  "pagination": {
-    "total": 15,
-    "page": 1,
-    "per_page": 10,
-    "total_pages": 2
+  "conditions": {
+    "disableRequired": false,
+    "required": [
+      {
+        "type": "text",
+        "key": "passport",
+        "value": "",
+        "instruction": "Enter passport number",
+        "dataSource": 0
+      }
+    ],
+    "conditionItems": [
+      { "id": 401, "title": "No refund" }
+    ]
   }
 }
 ```
 
-**Error (400 Bad Request)**:
+## Package Schema (สรุป)
+
 ```json
 {
-  "success": false,
-  "message": "Missing required parameters",
-  "errors": {
-    "from_port": "from_port is required"
+  "id": "pk-501",
+  "productId": 501,
+  "name": "Snorkeling Package",
+  "description": "...",
+  "shortDescription": "...",
+  "price": 1900,
+  "images": ["https://..."],
+  "serviceType": "Snorkeling",
+  "vehicleType": "Speedboat",
+  "startTime": "08:00",
+  "stopTime": "16:30",
+  "locations": ["Koh Tao", "Koh Nang Yuan"],
+  "note": "...",
+  "included": {
+    "meal": ["Lunch"],
+    "equipment": ["Mask", "Life Jacket"],
+    "pickupService": "Hotel Pickup",
+    "guides": "English Guide"
+  },
+  "additionalInformation": {
+    "nationalParkFee": "Not included",
+    "insurance": "Included",
+    "skillLevel": "Beginner",
+    "groupSize": "1-20",
+    "whatToBring": ["Sunscreen", "Towel"]
+  },
+  "termsAndConditions": {
+    "cancellationPolicy": ["24 hours before departure"],
+    "weatherConditions": ["Subject to sea conditions"]
   }
 }
 ```
 
----
+## Frontend Integration Notes
 
-### 2. List Ports (GET)
+- แนะนำเรียก `GET /frontend/bootstrap` ตอนเข้า page ครั้งแรก เพื่อลดจำนวน request
+- เวลา search ใหม่ สามารถเลือกใช้ `GET /frontend/tickets` โดยตรง
+- `childAges` ฝั่ง query string ต้องส่งแบบ comma-separated เช่น `5,8`
+- ถ้าส่ง `departDate` ไม่ถูกต้อง backend จะ fallback เป็นวันที่ปัจจุบัน + 2 วัน
+- ฝั่ง UI ควรใช้ `id` (`tk-*`/`pk-*`) เป็น canonical id สำหรับ detail page
 
-**Endpoint**: `GET /ports`
+## Quick cURL
 
-**Description**: ดึงรายการท่าเรือทั้งหมด
-
-**Parameters**: None
-
-**Response (200 OK)**:
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "port_code": "BKK",
-      "port_name": "Bangkok Port",
-      "city": "Bangkok",
-      "country": "Thailand"
-    },
-    {
-      "id": 2,
-      "port_code": "HKT",
-      "port_name": "Phuket Port",
-      "city": "Phuket",
-      "country": "Thailand"
-    },
-    {
-      "id": 3,
-      "port_code": "KBV",
-      "port_name": "Krabi Port",
-      "city": "Krabi",
-      "country": "Thailand"
-    }
-  ]
-}
-```
-
----
-
-### 3. Create Booking (POST)
-
-**Endpoint**: `POST /bookings`
-
-**Description**: สร้างการจองตั๋วเรือ
-
-**Headers**:
-```
-Content-Type: application/json
-X-WP-Nonce: [nonce-token]
-```
-
-**Request Body**:
-```json
-{
-  "trip_id": 1,
-  "passenger_name": "สมชาย ใหญ่ชัย",
-  "passenger_email": "somchai@example.com",
-  "passenger_phone": "0812345678",
-  "number_of_passengers": 2,
-  "total_price": 1700
-}
-```
-
-**Response (201 Created)**:
-```json
-{
-  "success": true,
-  "data": {
-    "id": 5,
-    "trip_id": 1,
-    "booking_ref": "FTBS-20240429-0005",
-    "passenger_name": "สมชาย ใหญ่ชัย",
-    "passenger_email": "somchai@example.com",
-    "passenger_phone": "0812345678",
-    "number_of_passengers": 2,
-    "total_price": 1700,
-    "status": "pending",
-    "created_at": "2024-04-29T15:30:00",
-    "order_id": null
-  }
-}
-```
-
-**Error (400 Bad Request)**:
-```json
-{
-  "success": false,
-  "message": "Validation error",
-  "errors": {
-    "trip_id": "Trip not found",
-    "number_of_passengers": "Not enough available seats"
-  }
-}
-```
-
----
-
-### 4. Get Booking Details (GET)
-
-**Endpoint**: `GET /bookings/{booking_id}`
-
-**Description**: ดึงรายละเอียดการจอง
-
-**Response (200 OK)**:
-```json
-{
-  "success": true,
-  "data": {
-    "id": 5,
-    "trip_id": 1,
-    "booking_ref": "FTBS-20240429-0005",
-    "passenger_name": "สมชาย ใหญ่ชัย",
-    "passenger_email": "somchai@example.com",
-    "passenger_phone": "0812345678",
-    "number_of_passengers": 2,
-    "total_price": 1700,
-    "status": "pending",
-    "trip_details": {
-      "id": 1,
-      "ferry_name": "Speed Ferry Premium",
-      "from_port": "BKK",
-      "to_port": "HKT",
-      "departure_time": "2024-04-29T08:00:00",
-      "arrival_time": "2024-04-29T12:30:00"
-    },
-    "created_at": "2024-04-29T15:30:00"
-  }
-}
-```
-
----
-
-### 5. Cancel Booking (POST)
-
-**Endpoint**: `POST /bookings/{booking_id}/cancel`
-
-**Description**: ยกเลิกการจอง
-
-**Response (200 OK)**:
-```json
-{
-  "success": true,
-  "message": "Booking cancelled successfully",
-  "data": {
-    "id": 5,
-    "status": "cancelled",
-    "refund_amount": 1700
-  }
-}
-```
-
----
-
-## 🔐 Error Status Codes
-
-| Code | Description |
-|------|-------------|
-| 200 | OK - Request successful |
-| 201 | Created - Resource created |
-| 400 | Bad Request - Invalid parameters |
-| 401 | Unauthorized - Authentication required |
-| 403 | Forbidden - Insufficient permissions |
-| 404 | Not Found - Resource not found |
-| 500 | Internal Server Error |
-
----
-
-## 📞 Common Error Messages
-
-```json
-{
-  "success": false,
-  "message": "Trip not found",
-  "code": "TRIP_NOT_FOUND"
-}
-```
-
-```json
-{
-  "success": false,
-  "message": "Not enough available seats",
-  "code": "INSUFFICIENT_SEATS"
-}
-```
-
-```json
-{
-  "success": false,
-  "message": "This booking has already been cancelled",
-  "code": "ALREADY_CANCELLED"
-}
-```
-
----
-
-## 🧪 Testing API with cURL
-
-### Search Trips
 ```bash
-curl -X GET "http://localhost:8888/tratferryticket2/wp-json/ftbs/v1/trips/search?from_port=BKK&to_port=HKT&departure_date=2024-04-29&number_of_passengers=2"
+curl "https://<your-domain>/wp-json/custom/v1/frontend/bootstrap?from=BKK&to=KSM&departDate=2026-05-13&includePackages=1"
 ```
 
-### Get Ports
 ```bash
-curl -X GET "http://localhost:8888/tratferryticket2/wp-json/ftbs/v1/ports"
+curl "https://<your-domain>/wp-json/custom/v1/frontend/tickets/tk-101?departDate=2026-05-13"
 ```
 
-### Create Booking
 ```bash
-curl -X POST "http://localhost:8888/tratferryticket2/wp-json/ftbs/v1/bookings" \
+curl -X POST "https://<your-domain>/wp-json/custom/v1/frontend/bookings" \
   -H "Content-Type: application/json" \
-  -d '{
-    "trip_id": 1,
-    "passenger_name": "Test User",
-    "passenger_email": "test@example.com",
-    "passenger_phone": "0812345678",
-    "number_of_passengers": 2,
-    "total_price": 1700
-  }'
+  -d '{"ticketId":"tk-101","passengers":[{"name":"John"}]}'
 ```
-
----
-
-## 💻 Vue.js Integration Example
-
-```javascript
-// services/api.js
-import axios from 'axios';
-
-const API_URL = '/wp-json/ftbs/v1';
-
-export const tripService = {
-  searchTrips(params) {
-    return axios.get(`${API_URL}/trips/search`, { params });
-  },
-  
-  getPorts() {
-    return axios.get(`${API_URL}/ports`);
-  },
-  
-  createBooking(bookingData) {
-    return axios.post(`${API_URL}/bookings`, bookingData);
-  },
-  
-  getBooking(bookingId) {
-    return axios.get(`${API_URL}/bookings/${bookingId}`);
-  },
-  
-  cancelBooking(bookingId) {
-    return axios.post(`${API_URL}/bookings/${bookingId}/cancel`);
-  }
-};
-```
-
----
-
-## 📌 Rate Limiting
-
-API requests จะถูก rate limit ที่ 100 requests ต่อ 1 hour per IP address
-
----
-
-## 🔄 Pagination
-
-ข้อมูลที่มีจำนวนมากจะใช้ pagination:
-- Default page size: 10
-- Max page size: 50
-- Query: `?page=1&per_page=20`

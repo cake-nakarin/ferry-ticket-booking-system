@@ -1,21 +1,43 @@
 <template>
-  <div class="trip-card" :class="{ expanded: isExpanded }" style="position: relative;">
+  <div
+    class="trip-card"
+    :class="{ expanded: isExpanded, 'sold-out': isSoldOut }"
+    style="position: relative;"
+  >
     <button class="trip-expand-btn" @click.stop="isExpanded = !isExpanded">
       <i class="fas fa-chevron-down"></i>
     </button>
 
+    <div v-if="isSoldOut" class="sold-out-badge">SOLD OUT</div>
+
     <div class="trip-card-main" @click="isExpanded = !isExpanded">
-      <div class="trip-logo" :style="logoStyle">{{ ticket.code }}</div>
+      <div class="trip-logo" :style="logoStyle" @click.stop="openPhotoTab">
+        <img
+          v-if="ticket.image"
+          :src="ticket.image"
+          :alt="ticket.type"
+          class="trip-logo-img"
+        />
+        <span class="trip-logo-code">{{ ticket.code }}</span>
+      </div>
 
       <div class="trip-details">
         <div class="trip-details-left">
-          <div class="trip-airline">{{ ticket.type }}</div>
+          <div class="trip-airline" @click.stop="openPhotoTab">{{ ticket.type }}</div>
+          <div class="trip-operator" v-if="ticket.operator">
+            <i class="fas fa-building"></i> {{ ticket.operator }}
+          </div>
           <div class="trip-route">
             {{ ticket.departTime }}
             <i class="fas fa-arrow-right"></i>
             {{ ticket.arriveTime }}
           </div>
-          <div class="trip-duration">{{ ticket.duration }} • {{ ticket.seats }} {{ t('ticket.seatsLeft') }}</div>
+          <div class="trip-duration">
+            {{ ticket.duration }}
+            <span v-if="isSoldOut" class="seats-badge sold">✕ Sold out</span>
+            <span v-else-if="ticket.seats <= 10" class="seats-badge low">⚠ {{ ticket.seats }} seats left</span>
+            <span v-else class="seats-badge ok">{{ ticket.seats }} {{ t('ticket.seatsLeft') }}</span>
+          </div>
         </div>
         <div class="trip-details-right">
           <div class="trip-amenity" v-for="amenity in ticket.amenities" :key="amenity.icon">
@@ -27,92 +49,197 @@
       <div class="trip-action">
         <div class="trip-price">
           <div class="trip-price-label">{{ t('ticket.pricePerPerson') }}</div>
-          <div class="trip-price-value">฿{{ ticket.price.toLocaleString() }}</div>
+          <div class="trip-price-value">฿{{ ticket.pricing.adult.toLocaleString() }}</div>
+          <div class="trip-price-total">Total ฿{{ totalPrice.toLocaleString() }}</div>
         </div>
         <button
           class="book-btn"
-          :class="{ selected: isSelected }"
+          :class="{ selected: isSelected || forceSelected, disabled: isSoldOut }"
+          :disabled="isSoldOut"
           @click.stop="toggleSelect"
         >
-          <i :class="isSelected ? 'fas fa-check' : 'fas fa-shopping-cart'"></i>
-          {{ isSelected ? t('ticket.selected') : t('ticket.select') }}
+          <i :class="isSoldOut ? 'fas fa-ban' : isSelected ? 'fas fa-check' : 'fas fa-shopping-cart'"></i>
+          {{ isSoldOut ? 'Sold Out' : isSelected ? t('ticket.selected') : t('ticket.select') }}
         </button>
       </div>
     </div>
 
     <div class="trip-details-expanded" v-show="isExpanded">
-      <div class="expanded-section">
-        <div class="expanded-section-title"><i class="fas fa-route"></i> {{ t('ticket.route') }}</div>
-        <div class="journey-timeline">
-          <div class="timeline-segment">
-            <div class="timeline-time">
-              <div class="timeline-hour">{{ ticket.departTime }}</div>
-              <div class="timeline-dot"></div>
+      <div class="expanded-tabs">
+        <button
+          class="expanded-tab"
+          :class="{ active: activeTab === 'route' }"
+          @click.stop="activeTab = 'route'"
+        >
+          <i class="fas fa-route"></i> Route details
+        </button>
+        <button
+          class="expanded-tab"
+          :class="{ active: activeTab === 'photos' }"
+          @click.stop="activeTab = 'photos'"
+        >
+          <i class="fas fa-images"></i> Photos
+        </button>
+        <button
+          class="expanded-tab"
+          :class="{ active: activeTab === 'service' }"
+          @click.stop="activeTab = 'service'"
+        >
+          <i class="fas fa-list-check"></i> Service details
+        </button>
+        <button
+          class="expanded-tab"
+          :class="{ active: activeTab === 'price' }"
+          @click.stop="activeTab = 'price'"
+        >
+          <i class="fas fa-receipt"></i> Price summary
+        </button>
+      </div>
+
+      <div class="expanded-tab-content">
+        <!-- Route details -->
+        <div v-if="activeTab === 'route'">
+          <div class="journey-timeline">
+            <div class="timeline-segment">
+              <div class="timeline-time">
+                <div class="timeline-hour">{{ ticket.departTime }}</div>
+                <div class="timeline-dot"></div>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-location"><i class="fas fa-anchor"></i> {{ ticket.from }}</div>
+                <div class="timeline-airport">{{ ticket.fromPort }}</div>
+                <div class="timeline-details">
+                  <div class="timeline-detail-item"><i class="fas fa-door-open"></i> {{ t('ticket.gate') }} {{ ticket.departGate }}</div>
+                  <div class="timeline-detail-item"><i class="fas fa-info-circle"></i> {{ t('ticket.checkin') }} {{ ticket.checkinTime }}</div>
+                </div>
+              </div>
             </div>
-            <div class="timeline-content">
-              <div class="timeline-location"><i class="fas fa-anchor"></i> {{ ticket.from }}</div>
-              <div class="timeline-airport">{{ ticket.fromPort }}</div>
-              <div class="timeline-details">
-                <div class="timeline-detail-item"><i class="fas fa-door-open"></i> {{ t('ticket.gate') }} {{ ticket.departGate }}</div>
-                <div class="timeline-detail-item"><i class="fas fa-info-circle"></i> {{ t('ticket.checkin') }} {{ ticket.checkinTime }}</div>
+
+            <div class="timeline-segment">
+              <div class="timeline-time">
+                <div class="timeline-hour" style="font-size: 13px; color: var(--text-lighter);">{{ ticket.duration }}</div>
+              </div>
+              <div class="timeline-content" style="font-size: 12px; color: var(--text-lighter);">
+                ⟶ {{ t('ticket.travel') }}
+              </div>
+            </div>
+
+            <div class="timeline-segment">
+              <div class="timeline-time">
+                <div class="timeline-hour">{{ ticket.arriveTime }}</div>
+                <div class="timeline-dot"></div>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-location"><i class="fas fa-anchor"></i> {{ ticket.to }}</div>
+                <div class="timeline-airport">{{ ticket.toPort }}</div>
+                <div class="timeline-details">
+                  <div class="timeline-detail-item"><i class="fas fa-door-open"></i> {{ t('ticket.gate') }} {{ ticket.arriveGate }}</div>
+                  <div class="timeline-detail-item"><i class="fas fa-clock"></i> {{ t('ticket.checkout') }} {{ ticket.checkoutTime }}</div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="timeline-segment">
-            <div class="timeline-time">
-              <div class="timeline-hour" style="font-size: 13px; color: var(--text-lighter);">{{ ticket.duration }}</div>
-            </div>
-            <div class="timeline-content" style="font-size: 12px; color: var(--text-lighter);">
-              ⟶ {{ t('ticket.travel') }}
-            </div>
+          <div v-if="ticket.notes" class="expanded-notes" style="margin-top: 12px;">
+            <strong><i class="fas fa-info-circle"></i> {{ t('ticket.terms') }}</strong>
+            {{ ticket.notes }}
           </div>
+        </div>
 
-          <div class="timeline-segment">
-            <div class="timeline-time">
-              <div class="timeline-hour">{{ ticket.arriveTime }}</div>
-              <div class="timeline-dot"></div>
+        <!-- Photos -->
+        <div v-else-if="activeTab === 'photos'">
+          <div v-if="ticket.images?.length" class="photo-gallery">
+            <div class="gallery-main">
+              <div
+                class="gallery-track"
+                :style="{ transform: `translateX(-${activePhotoIndex * 100}%)` }"
+              >
+                <img
+                  v-for="(img, i) in galleryImages"
+                  :key="img.url + i"
+                  :src="img.url"
+                  :alt="img.caption"
+                  class="gallery-main-img"
+                />
+              </div>
+
+              <div class="gallery-caption">{{ galleryImages[activePhotoIndex].caption }}</div>
+              <div class="gallery-type-overlay">
+                <span>{{ ticket.type }}</span>
+                <span class="gallery-operator"><i class="fas fa-building"></i> {{ ticket.operator }}</span>
+              </div>
             </div>
-            <div class="timeline-content">
-              <div class="timeline-location"><i class="fas fa-anchor"></i> {{ ticket.to }}</div>
-              <div class="timeline-airport">{{ ticket.toPort }}</div>
-              <div class="timeline-details">
-                <div class="timeline-detail-item"><i class="fas fa-door-open"></i> {{ t('ticket.gate') }} {{ ticket.arriveGate }}</div>
-                <div class="timeline-detail-item"><i class="fas fa-clock"></i> {{ t('ticket.checkout') }} {{ ticket.checkoutTime }}</div>
+
+            <div class="carousel-footer">
+              <div class="carousel-arrows">
+                <button class="carousel-nav" @click.stop="prevPhoto" aria-label="Previous photo">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="carousel-nav" @click.stop="nextPhoto" aria-label="Next photo">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+
+              <div class="carousel-dots" role="tablist" aria-label="Photo positions">
+                <button
+                  v-for="(img, i) in galleryImages"
+                  :key="`dot-${img.url}-${i}`"
+                  class="carousel-dot"
+                  :class="{ active: i === activePhotoIndex }"
+                  @click.stop="activePhotoIndex = i"
+                  :aria-label="`Go to photo ${i + 1}`"
+                ></button>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div class="expanded-section">
-        <div class="expanded-section-title"><i class="fas fa-list-check"></i> {{ t('ticket.service') }}</div>
-        <div class="expanded-content">
-          <div class="expanded-item" v-for="detail in ticket.details" :key="detail.label">
-            <span class="expanded-item-label">{{ detail.label }}</span>
-            <span class="expanded-item-value">{{ detail.value }}</span>
+          <div v-else class="no-photo-state">
+            <i class="fas fa-image"></i>
+            <span>No vehicle photos available</span>
           </div>
         </div>
-      </div>
 
-      <div class="expanded-section">
-        <div class="expanded-section-title"><i class="fas fa-receipt"></i> {{ t('ticket.pricing') }}</div>
-        <div class="expanded-content">
-          <div class="expanded-item">
-            <span class="expanded-item-label">{{ t('ticket.ticketPrice') }}</span>
-            <span class="expanded-item-value" style="color: var(--accent);">฿{{ ticket.price.toLocaleString() }}</span>
-          </div>
-          <div class="expanded-item">
-            <span class="expanded-item-label">{{ t('ticket.fee') }}</span>
-            <span class="expanded-item-value">฿{{ ticket.fee }}</span>
+        <!-- Service details -->
+        <div v-else-if="activeTab === 'service'">
+          <div class="expanded-content">
+            <div class="expanded-item" v-for="detail in ticket.details" :key="detail.label">
+              <span class="expanded-item-label">{{ detail.label }}</span>
+              <span class="expanded-item-value">{{ detail.value }}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="expanded-section">
-        <div class="expanded-notes">
-          <strong><i class="fas fa-info-circle"></i> {{ t('ticket.terms') }}</strong>
-          {{ ticket.notes }}
+        <!-- Price summary -->
+        <div v-else-if="activeTab === 'price'">
+          <div class="expanded-content">
+            <div class="expanded-item">
+              <span class="expanded-item-label">Adult (age 12+)</span>
+              <span class="expanded-item-value" style="color: var(--accent);">฿{{ ticket.pricing.adult.toLocaleString() }}</span>
+            </div>
+            <div class="expanded-item">
+              <span class="expanded-item-label">Child (age 5–11)</span>
+              <span class="expanded-item-value" style="color: var(--accent);">฿{{ ticket.pricing.child.toLocaleString() }}</span>
+            </div>
+            <div class="expanded-item">
+              <span class="expanded-item-label">Toddler (under 5)</span>
+              <span class="expanded-item-value" style="color: #4caf50;">Free</span>
+            </div>
+            <div class="expanded-item">
+              <span class="expanded-item-label">{{ t('ticket.fee') }}</span>
+              <span class="expanded-item-value">฿{{ ticket.fee }}</span>
+            </div>
+          </div>
+
+          <div class="price-breakdown">
+            <div class="price-breakdown-title">Your trip breakdown</div>
+            <div class="price-breakdown-row" v-for="row in priceBreakdownRows" :key="row.label">
+              <span>{{ row.label }}</span>
+              <span>{{ row.amount === 0 ? 'Free' : '฿' + row.amount.toLocaleString() }}</span>
+            </div>
+            <div class="price-breakdown-total">
+              <span>Total</span>
+              <span>฿{{ totalPrice.toLocaleString() }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -125,12 +252,37 @@ import { useBookingStore } from '../stores/booking'
 import { t } from '../i18n'
 
 const props = defineProps({
-  ticket: { type: Object, required: true }
+  ticket: { type: Object, required: true },
+  searchParams: { type: Object, default: () => ({ adults: 1, childAges: [] }) },
+  managed: { type: Boolean, default: false },
+  forceSelected: { type: Boolean, default: false },
 })
+
+const emit = defineEmits(['ticket-select'])
 
 const bookingStore = useBookingStore()
 const isExpanded = ref(false)
 const isSelected = ref(false)
+const activeTab = ref('route')
+const activePhotoIndex = ref(0)
+
+const galleryImages = computed(() => props.ticket.images ?? [])
+const openPhotoTab = () => {
+  isExpanded.value = true
+  activeTab.value = 'photos'
+  activePhotoIndex.value = 0
+}
+
+const changePhoto = (step) => {
+  const total = galleryImages.value.length
+  if (!total) return
+  activePhotoIndex.value = (activePhotoIndex.value + step + total) % total
+}
+
+const prevPhoto = () => changePhoto(-1)
+const nextPhoto = () => changePhoto(1)
+
+const isSoldOut = computed(() => props.ticket.seats === 0)
 
 const logoStyle = computed(() => {
   if (props.ticket.logoColor) {
@@ -139,9 +291,52 @@ const logoStyle = computed(() => {
   return {}
 })
 
+const getPriceForAge = (age) => {
+  const p = props.ticket.pricing
+  if (age >= 12) return p.adult
+  if (age >= 5) return p.child
+  return p.toddler
+}
+
+const priceBreakdownRows = computed(() => {
+  const rows = []
+  const { adults = 1, childAges = [] } = props.searchParams
+  const p = props.ticket.pricing
+
+  if (adults > 0) {
+    rows.push({ label: `Adult x${adults}`, amount: adults * p.adult })
+  }
+
+  childAges.forEach((age, i) => {
+    if (age === null) return
+    const amount = getPriceForAge(age)
+    const category = age >= 12 ? 'Adult' : age >= 5 ? 'Child' : 'Toddler'
+    rows.push({ label: `${category} (age ${age}) x1`, amount })
+  })
+
+  return rows
+})
+
+const totalPrice = computed(() =>
+  priceBreakdownRows.value.reduce((sum, r) => sum + r.amount, 0)
+)
+
+const hasPriceSummary = computed(() => {
+  const { adults = 1, childAges = [] } = props.searchParams
+  return adults > 1 || childAges.some((a) => a !== null)
+})
+
 const toggleSelect = () => {
+  if (isSoldOut.value) return
+
+  if (props.managed) {
+    emit('ticket-select', props.ticket)
+    return
+  }
+
   if (isSelected.value) {
     isSelected.value = false
+    bookingStore.removeFromCartById(props.ticket.id)
   } else {
     isSelected.value = true
     bookingStore.addToCart({
@@ -150,8 +345,9 @@ const toggleSelect = () => {
       destination: props.ticket.to,
       date: props.ticket.departDate,
       time: props.ticket.departTime,
-      price: props.ticket.price,
-      type: props.ticket.type
+      price: totalPrice.value || props.ticket.pricing.adult,
+      type: props.ticket.type,
+      priceBreakdown: priceBreakdownRows.value,
     })
   }
 }
@@ -201,6 +397,167 @@ const toggleSelect = () => {
   color: var(--primary);
   flex-shrink: 0;
   border: 0.5px solid rgb(227, 228, 232);
+  position: relative;
+  overflow: hidden;
+}
+
+.trip-logo-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.trip-logo-code {
+  position: relative;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.42);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.photo-gallery {
+  margin-bottom: 14px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 0.5px solid var(--border);
+  background: #ececec;
+  padding: 14px;
+}
+
+.gallery-main {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  border-radius: 6px;
+  aspect-ratio: 4 / 3;
+}
+
+.gallery-track {
+  display: flex;
+  height: 100%;
+  transition: transform 280ms ease;
+}
+
+.gallery-main-img {
+  width: 100%;
+  min-width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.92);
+  background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%);
+}
+
+.gallery-type-overlay {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gallery-type-overlay span:first-child {
+  background: rgba(0,0,0,0.58);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 3px;
+}
+
+.gallery-operator {
+  background: rgba(0,0,0,0.46);
+  color: rgba(255,255,255,0.88);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.carousel-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 2px;
+}
+
+.carousel-arrows {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.carousel-nav {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #c6c6c6;
+  background: #f6f6f6;
+  color: #333;
+  cursor: pointer;
+}
+
+.carousel-nav:hover {
+  background: #ebebeb;
+}
+
+.carousel-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+
+.carousel-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: none;
+  background: #c4c4c4;
+  cursor: pointer;
+  opacity: 0.9;
+  transition: transform 120ms, background 120ms;
+}
+
+.carousel-dot.active {
+  background: #8ea09c;
+  transform: scale(1.12);
+}
+
+@media (max-width: 640px) {
+  .photo-gallery {
+    padding: 10px;
+  }
+
+  .carousel-nav {
+    width: 24px;
+    height: 24px;
+  }
+
+  .carousel-dot {
+    width: 8px;
+    height: 8px;
+  }
 }
 
 .trip-details {
@@ -219,8 +576,38 @@ const toggleSelect = () => {
   font-size: 12px;
   font-weight: 500;
   color: var(--text-light);
+  cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 0.3px;
+}
+
+.trip-operator {
+  font-size: 11px;
+  color: var(--primary);
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+.trip-airline:hover {
+  color: var(--primary);
+}
+  gap: 4px;
+  margin-top: 1px;
+}
+
+.trip-operator i {
+.no-photo-state {
+  min-height: 120px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-light);
+  font-size: 13px;
+}
+  font-size: 10px;
 }
 
 .trip-route {
@@ -240,6 +627,32 @@ const toggleSelect = () => {
 .trip-duration {
   font-size: 12px;
   color: var(--text-light);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.seats-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.seats-badge.ok {
+  background: #E8F5E9;
+  color: #388E3C;
+}
+
+.seats-badge.low {
+  background: #FFF3E0;
+  color: #E65100;
+}
+
+.seats-badge.sold {
+  background: #FFEBEE;
+  color: #C62828;
 }
 
 .trip-details-right {
@@ -291,6 +704,12 @@ const toggleSelect = () => {
   color: var(--accent);
 }
 
+.trip-price-total {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
 .book-btn {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: white;
@@ -315,6 +734,72 @@ const toggleSelect = () => {
 
 .book-btn.selected {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+}
+
+.book-btn.disabled,
+.book-btn:disabled {
+  background: linear-gradient(135deg, #bdbdbd 0%, #9e9e9e 100%);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.sold-out-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #C62828;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 3px;
+  letter-spacing: 0.8px;
+  z-index: 2;
+}
+
+.trip-card.sold-out {
+  opacity: 0.7;
+  background: #fafafa;
+}
+
+.trip-card.sold-out .trip-logo {
+  filter: grayscale(0.5);
+}
+
+.price-breakdown {
+  margin-top: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 12px;
+}
+
+.price-breakdown-title {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.price-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-light);
+  padding: 2px 0;
+}
+
+.price-breakdown-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  color: var(--accent);
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+  padding-top: 6px;
+  font-size: 13px;
 }
 
 .trip-expand-btn {
@@ -343,31 +828,49 @@ const toggleSelect = () => {
 }
 
 .trip-details-expanded {
-  padding-top: 16px;
+  padding-top: 12px;
 }
 
-.expanded-section {
-  margin-bottom: 16px;
+.expanded-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 14px;
 }
 
-.expanded-section:last-child {
-  margin-bottom: 0;
-}
-
-.expanded-section-title {
+.expanded-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  padding: 8px 14px;
   font-size: 12px;
   font-weight: 500;
   color: var(--text-light);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  transition: color 150ms, border-color 150ms;
+  white-space: nowrap;
 }
 
-.expanded-section-title i {
+.expanded-tab:hover {
   color: var(--primary);
+}
+
+.expanded-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 600;
+}
+
+.expanded-tab i {
+  font-size: 11px;
+}
+
+.expanded-tab-content {
+  min-height: 80px;
 }
 
 .expanded-content {
@@ -499,18 +1002,127 @@ const toggleSelect = () => {
   text-align: center;
 }
 
+/* ── Tablet (≤ 768px) ─────────────────────────────────── */
 @media (max-width: 768px) {
   .trip-card-main {
     grid-template-columns: auto 1fr;
   }
+
   .trip-action {
     grid-column: 1 / -1;
-    flex-direction: row-reverse;
+    flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    min-width: unset;
+    border-top: 0.5px solid rgb(227, 228, 232);
+    padding-top: 10px;
+    margin-top: 4px;
   }
+
+  .trip-price {
+    align-items: flex-start;
+  }
+
+  .book-btn {
+    width: auto;
+    padding: 10px 20px;
+  }
+
   .trip-details {
     grid-template-columns: 1fr;
+  }
+
+  .expanded-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .expanded-tabs::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ── Mobile (≤ 480px) ─────────────────────────────────── */
+@media (max-width: 480px) {
+  .trip-card {
+    padding: 12px;
+  }
+
+  .trip-expand-btn {
+    top: 10px;
+    right: 8px;
+  }
+
+  .trip-logo {
+    width: 56px;
+    height: 56px;
+    font-size: 20px;
+  }
+
+  .trip-logo-code {
+    font-size: 11px;
+    padding: 1px 5px;
+  }
+
+  .trip-route {
+    font-size: 14px;
+  }
+
+  .trip-price-value {
+    font-size: 18px;
+  }
+
+  .trip-price-label {
+    font-size: 10px;
+  }
+
+  .trip-price-total {
+    font-size: 10px;
+  }
+
+  .trip-details-right {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .trip-amenity {
+    background: #f0f4ff;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+
+  .expanded-tab {
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+
+  .expanded-tab i {
+    display: none;
+  }
+
+  .expanded-content {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-segment {
+    grid-template-columns: 64px 1fr;
+    gap: 10px;
+  }
+
+  .timeline-details {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .photo-gallery {
+    padding: 8px;
+  }
+
+  .sold-out-badge {
+    top: 8px;
+    left: 8px;
   }
 }
 </style>

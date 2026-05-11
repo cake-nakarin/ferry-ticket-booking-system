@@ -1,226 +1,198 @@
-# System Blueprint - ระบบจองตั๋วเรือ
+# System Blueprint
 
-## 📋 ภาพรวมระบบ
+## ภาพรวมระบบ
 
-### หน้าเดียว (Single Page) ประกอบด้วย 3 ส่วนหลัก:
+Single Page Application สำหรับจองตั๋วเรือ — ไม่มี backend จริง ใช้ mock data ทั้งหมด
+
+---
+
+## Layout หลัก
 
 ```
 ┌─────────────────────────────────────────────┐
-│           Header / Navigation               │
+│  TopHeader (ซ่อนบน mobile ≤640px)           │
 ├─────────────────────────────────────────────┤
-│                                             │
-│  ┌──────────────────┐  ┌────────────────┐   │
-│  │ SEARCH FORM      │  │  SHOPPING CART │   │
-│  │                  │  │                │   │
-│  │ - From Port      │  │ Selected Items │   │
-│  │ - To Port        │  │ - Trip 1       │   │
-│  │ - Date           │  │ - Trip 2       │   │
-│  │ - Passengers     │  │ - Prices       │   │
-│  │ - [Search]       │  │ - [Checkout]   │   │
-│  └──────────────────┘  └────────────────┘   │
-│                                             │
-│  ┌─────────────────────────────────────┐   │
-│  │     SEARCH RESULTS                  │   │
-│  │                                     │   │
-│  │  [Trip Card 1] [Trip Card 2] ...   │   │
-│  │  - Route                            │   │
-│  │  - Departure & Arrival Time         │   │
-│  │  - Available Seats                  │   │
-│  │  - Price                            │   │
-│  │  - [Select] button                  │   │
-│  └─────────────────────────────────────┘   │
-│                                             │
+│  MainHeader — Navigation + Logo             │
+│  (hamburger menu บน mobile ≤640px)          │
+├─────────────────────────────────────────────┤
+│  SearchSection                              │
+│  - tripType: oneway / roundtrip             │
+│  - from / to (dropdown location)            │
+│  - departDate / returnDate (date picker)    │
+│  - adults + children + childAges            │
+│  (หลัง search บน mobile: แสดง summary card) │
+├─────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────────────┐  │
+│  │FilterSidebar│  │  Ticket Results     │  │
+│  │(ซ่อน ≤1024)│  │  [TicketCard] ...   │  │
+│  └─────────────┘  └─────────────────────┘  │
+├─────────────────────────────────────────────┤
+│  MobileBookingBar (fixed bottom, mobile)    │
+│  - แสดงตั๋วที่เลือก + ราคา + ปุ่มดำเนินการ  │
 └─────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🎯 ส่วนที่ 1: Search Form
+## Component Architecture
 
-**จุดประสงค์**: ให้ผู้ใช้ค้นหาตั๋วเรือตามเงื่อนไข
+### `App.vue`
 
-### Input Fields:
-- **From Port** (dropdown) - ท่าเรือต้นทาง
-- **To Port** (dropdown) - ท่าเรือปลายทาง
-- **Departure Date** (date picker) - วันที่ออกเดินทาง
-- **Return Date** (date picker, optional) - วันที่กลับ (ถ้าเป็น Round Trip)
-- **Number of Passengers** (number input) - จำนวนผู้โดยสาร
-- **Search Button** - ปุ่มค้นหา
-
-### ลักษณะการแสดงผล:
-- ใช้ Flexbox/Grid สำหรับการจัดวาง
-- ตอบสนองต่อหน้าจอ (Mobile-friendly)
-- Icon สื่อสาร (ท่าเรือ, วันที่, คน)
+- Root component
+- `currentView: ref('home' | 'cart')` — สลับระหว่าง Home และ Cart
+- ฟัง `@go-cart` event จาก `Home.vue` เพื่อเปลี่ยนไป Cart
 
 ---
 
-## 📊 ส่วนที่ 2: Search Results
+### `Home.vue`
 
-**จุดประสงค์**: แสดงรายการตั๋วเรือที่พบการค้นหา
+Component หลักที่ควบคุม logic ทั้งหมด
 
-### ข้อมูลการแสดงผล (Trip Card):
-- **Route**: "Bangkok → Phuket"
-- **Ferry Name**: "Speed Ferry Premium"
-- **Departure Time**: "08:00" & **Arrival Time**: "12:30"
-- **Duration**: "4 hours 30 min"
-- **Available Seats**: 45 seats
-- **Price**: ฿850 per person
-- **Status Badge**: "Available" / "Sold Out" / "Limited"
-- **Select Button**: เลือกตั๋วนี้
+**State หลัก**:
+| Ref | Type | หน้าที่ |
+|-----|------|---------|
+| `tickets` | `ref([])` | ผลการค้นหา outbound |
+| `returnTickets` | `ref([])` | ผลการค้นหา return (round-trip) |
+| `currentStep` | `ref('outbound' \| 'return')` | ขั้นตอน round-trip |
+| `selectedOneway` | `ref(null)` | ตั๋วที่เลือก (one-way) |
+| `selectedOutbound` | `ref(null)` | ตั๋ว outbound (round-trip) |
+| `selectedReturn` | `ref(null)` | ตั๋ว return (round-trip) |
+| `searchFilters` | `ref({...})` | state การค้นหาปัจจุบัน |
+| `searchFormInitial` | `ref({...})` | ค่าเริ่มต้นส่งให้ SearchSection |
 
-### ฟีเจอร์:
-- Sort by: Departure Time, Price, Duration
-- Filter by: Price Range, Departure Time, Ferry Type
-- Pagination (if many results)
-- Loading Skeleton while fetching
-- Empty State message (if no results)
+**URL Functions**:
+- `getLocationId(label)` — แยก ID จาก label เช่น `'Bangkok (BKK)'` → `'BKK'`
+- `buildQueryFromSearch(params)` — สร้าง URLSearchParams
+- `pushSearchToUrl(params)` — `history.pushState` อัปเดต URL
+- `parseSearchFromUrl()` — อ่านและ parse URL query → search state
+- `onMounted`: parse URL → ถ้ามี query → auto-search ทันที
+- `onBeforeUnmount`: ลบ `popstate` listener
 
----
-
-## 🛒 ส่วนที่ 3: Shopping Cart
-
-**จุดประสงค์**: แสดงตั๋วที่เลือกไว้ และสำเร็จการชำระเงิน
-
-### ส่วนประกอบ:
-1. **Cart Header**: "Your Booking" + Item Count
-2. **Item List**:
-   - Trip Info (Route, Date, Time)
-   - Passenger Count
-   - Price per person
-   - Subtotal
-   - Remove button (X icon)
-3. **Summary**:
-   - Subtotal: ฿X,XXX
-   - Tax (if any): ฿X,XXX
-   - **Total**: ฿X,XXX
-4. **CTA Buttons**:
-   - Continue Shopping (return to results)
-   - Proceed to Checkout (via WooCommerce or custom payment)
-
-### Features:
-- Update quantity (±)
-- Remove items
-- Persistent cart (localStorage / Session)
-- Real-time total calculation
+**Event Handlers**:
+- `handleSearch(params)` — อัปเดต state + URL + โหลด tickets
+- `handleTicketSelect(ticket)` — set selectedOneway / selectedOutbound; ถ้า round-trip และ outbound ถูกเลือกแล้ว → เปลี่ยนไป step return
+- `handleProceed()` — `addToCart()` + emit `go-cart`
 
 ---
 
-## 🏗️ Data Flow
+### `SearchSection.vue`
+
+**Props**:
+- `initialValues` (Object) — ค่าเริ่มต้นจาก URL สำหรับ prefill form
+
+**State**:
+- `tripType` — `'oneway'` | `'roundtrip'`
+- `form` — `{ from, to, departDate, returnDate }`
+- `adults`, `children`, `childAges`
+- `hasSearched` — ใช้ toggle mobile summary view
+- `showSearchSummary` (computed) — `hasSearched && isMobileView`
+
+**Emits**:
+- `search` — `{ from, to, departDate, returnDate, tripType, adults, children, childAges }`
+
+---
+
+### `TicketCard.vue`
+
+**Props**:
+| Prop | Type | หน้าที่ |
+|------|------|---------|
+| `ticket` | Object (required) | ข้อมูลตั๋ว |
+| `searchParams` | Object | `{ adults, childAges }` — ใช้คำนวณราคา |
+| `managed` | Boolean | เปิด selection mode (ใช้ใน Home.vue) |
+| `forceSelected` | Boolean | แสดงสถานะ selected จากภายนอก |
+
+**Tabs**: route, photos, service, price
+
+**Photo carousel**: aspect ratio 4:3, sliding track, dot controls ด้านล่าง
+
+**Emits**: `ticket-select` (ใน managed mode)
+
+**Mobile layout**:
+- ≤768px: แถวบน (logo + details), แถวล่าง (action)
+- ≤480px: ลด padding, amenities เป็น pill
+
+---
+
+### `MobileBookingBar.vue`
+
+Fixed bottom bar แสดงบน mobile เท่านั้น (Home.vue ใช้ `v-if`)
+
+**Props**:
+| Prop | Type | Description |
+|------|------|-------------|
+| `tripType` | string | `'oneway'` \| `'roundtrip'` |
+| `currentStep` | string | `'outbound'` \| `'return'` |
+| `selectedOneway` | Object\|null | ตั๋วที่เลือก (one-way) |
+| `selectedOutbound` | Object\|null | ตั๋ว outbound |
+| `selectedReturn` | Object\|null | ตั๋ว return |
+| `totalPrice` | number | ราคารวม |
+| `outboundPrice` | number | ราคา outbound |
+| `returnPrice` | number | ราคา return |
+| `canProceed` | boolean | เปิด/ปิดปุ่มดำเนินการ |
+
+**Emits**: `change-oneway`, `change-outbound`, `change-return`, `proceed`
+
+**Layout**: Fixed bottom, width 100%, overflow-x hidden (ป้องกัน horizontal scroll)  
+One-way: แสดง 1 leg row; Round-trip: แสดง 2 leg rows
+
+---
+
+### `FilterSidebar.vue`
+
+Filter options:
+- `maxPrice` — ราคาสูงสุด (slider)
+- `ferryTypes` — ประเภทเรือ (checkbox)
+- `timeSlots` — ช่วงเวลาออกเดินทาง (checkbox)
+- `amenityFilters` — สิ่งอำนวยความสะดวก (checkbox)
+- `operatorFilters` — ผู้ประกอบการ (checkbox)
+
+ซ่อนบน mobile ≤1024px ด้วย `v-if` ใน Home.vue
+
+---
+
+## Booking Flow
+
+### One-way
 
 ```
-User Input (Search Form)
-       ↓
-   Vue.js triggers Search
-       ↓
-   WordPress REST API (GET /api/search-trips)
-       ↓
-   Backend Query Database (Trips table)
-       ↓
-   Return JSON Results
-       ↓
-   Vue.js renders Search Results
-       ↓
-   User clicks "Select"
-       ↓
-   Add to Cart (Vuex Store + localStorage)
-       ↓
-   Update Cart Display
-       ↓
-   User clicks "Checkout"
-       ↓
-   Redirect to Payment / Order Page
+SearchSection → emit('search')
+Home.vue → loadTickets() → tickets[]
+User เลือก TicketCard → selectedOneway set
+MobileBookingBar canProceed=true → emit('proceed')
+Home.vue → addToCart() → emit('go-cart')
+App.vue → currentView = 'cart'
+```
+
+### Round-trip
+
+```
+SearchSection → emit('search', { tripType: 'roundtrip' })
+Home.vue → loadTickets() → tickets[] (outbound)
+         currentStep = 'outbound'
+
+User เลือก TicketCard → selectedOutbound set
+         currentStep = 'return'
+Home.vue → loadReturnTickets() → returnTickets[] (from/to สลับ)
+
+User เลือก TicketCard → selectedReturn set
+MobileBookingBar canProceed=true → emit('proceed')
+Home.vue → addToCart(outbound) + addToCart(return) → emit('go-cart')
 ```
 
 ---
 
-## 💾 Database Schema (Planned)
+## Pinia Store (`src/stores/booking.js`)
 
-### Table: ferry_trips
-```
-- id (PK)
-- ferry_name
-- from_port
-- to_port
-- departure_time
-- arrival_time
-- available_seats
-- total_seats
-- price
-- trip_type (oneway/roundtrip)
-- status (active/cancelled)
-- created_at
-- updated_at
+Setup Store style:
+
+```js
+const cartItems = ref([])
+const cartTotal = computed(...)
+const cartCount = computed(...)
+
+function addToCart(item) { ... }
+function removeFromCartById(id) { ... }
 ```
 
-### Table: ferry_bookings
-```
-- id (PK)
-- order_id (FK to WooCommerce orders)
-- trip_id (FK to ferry_trips)
-- passenger_name
-- passenger_email
-- passenger_phone
-- number_of_passengers
-- total_price
-- status (pending/confirmed/cancelled)
-- created_at
-- updated_at
-```
-
----
-
-## 🎨 UI/UX Considerations
-
-### Color Scheme:
-- Primary: Ocean Blue (#0066CC or similar)
-- Accent: Coral/Orange (#FF6B35)
-- Neutral: Light Gray (#F5F5F5)
-- Text: Dark Gray (#333333)
-
-### Typography:
-- Headings: Bold, larger size (24px-32px)
-- Body: Regular, readable size (14px-16px)
-- Small text: 12px-13px
-
-### Components Style:
-- Rounded corners (4px-8px)
-- Subtle shadows for depth
-- Smooth animations/transitions
-- Icons from Font Awesome or Material Icons
-
----
-
-## 📱 Responsive Design
-
-### Breakpoints:
-- **Mobile**: < 640px (Stack vertically)
-- **Tablet**: 640px - 1024px (2-column layout)
-- **Desktop**: > 1024px (Full 3-section layout)
-
-**Mobile Layout**:
-- Search Form on top (full width)
-- Search Results in middle (scrollable)
-- Cart on bottom or via modal/drawer
-
----
-
-## 🔐 Security Considerations
-
-- ✅ CSRF token validation for POST requests
-- ✅ Input validation on both client & server
-- ✅ User authentication check
-- ✅ Rate limiting for API calls
-- ✅ SQL injection prevention (prepared statements)
-- ✅ XSS prevention (sanitize output)
-
----
-
-## 📌 Next Steps
-
-1. ✅ Create folder structure and docs
-2. ⏳ Setup plugin main file and enqueue Vue.js
-3. ⏳ Create Vue.js components (SearchForm, SearchResults, Cart)
-4. ⏳ Setup WordPress REST API endpoints
-5. ⏳ Create database tables
-6. ⏳ Add styling and make responsive
-7. ⏳ Testing and optimization
+ไม่เรียก API โดยตรง — logic อยู่ใน Home.vue, service functions อยู่ใน `src/services/`

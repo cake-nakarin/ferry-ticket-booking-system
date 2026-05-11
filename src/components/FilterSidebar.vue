@@ -36,7 +36,17 @@
     <div class="filter-panel">
       <h3><i class="fas fa-wifi"></i> {{ t('filters.amenities') }}</h3>
       <div class="filter-items">
-        <div class="filter-item" v-for="item in amenities" :key="item.id">
+        <div class="filter-item" v-for="item in amenityFilters" :key="item.id">
+          <input type="checkbox" :id="item.id" v-model="item.checked">
+          <label :for="item.id">{{ item.label }}</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-panel">
+      <h3><i class="fas fa-building"></i> Operator</h3>
+      <div class="filter-items">
+        <div class="filter-item" v-for="item in operatorFilters" :key="item.id">
           <input type="checkbox" :id="item.id" v-model="item.checked">
           <label :for="item.id">{{ item.label }}</label>
         </div>
@@ -46,28 +56,45 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { ref, reactive, watchEffect } from 'vue'
 import { t } from '../i18n'
+import { OPERATORS } from '../services/mockData'
 
-const maxPrice = ref(1200)
+const emit = defineEmits(['filter-change'])
 
-const ferryTypes = computed(() => [
-  { id: 'ferry1', label: 'Speed Ferry Premium', count: 7, checked: true },
-  { id: 'ferry2', label: 'Comfort Ferry', count: 5, checked: true },
-  { id: 'ferry3', label: 'Economy Express', count: 3, checked: false },
+const maxPrice = ref(2000)
+
+const ferryTypes = reactive([
+  { id: 'ferry1', label: 'Speed Ferry Premium', value: 'Speed Ferry Premium', count: 3, checked: true },
+  { id: 'ferry2', label: 'Comfort Ferry', value: 'Comfort Ferry', count: 2, checked: true },
+  { id: 'ferry3', label: 'Economy Express', value: 'Economy Express', count: 2, checked: true },
 ])
 
-const timeSlots = computed(() => [
-  { id: 'time1', label: t('filters.morning'), count: 8, checked: true },
-  { id: 'time2', label: t('filters.afternoon'), count: 4, checked: false },
-  { id: 'time3', label: t('filters.evening'), count: 2, checked: false },
+const timeSlots = reactive([
+  { id: 'time1', label: 'Morning (06:00 - 12:00)', value: 'morning', count: 3, checked: true },
+  { id: 'time2', label: 'Afternoon (12:00 - 18:00)', value: 'afternoon', count: 2, checked: true },
+  { id: 'time3', label: 'Evening (18:00 - 23:59)', value: 'evening', count: 2, checked: true },
 ])
 
-const amenities = computed(() => [
-  { id: 'amen1', label: 'WiFi', checked: true },
-  { id: 'amen2', label: t('filters.food'), checked: true },
-  { id: 'amen3', label: t('filters.vipRestroom'), checked: false },
+const amenityFilters = reactive([
+  { id: 'amen1', label: 'WiFi', value: 'WiFi', checked: false },
+  { id: 'amen2', label: 'Food and drinks', value: 'Food and drinks', checked: false },
+  { id: 'amen3', label: 'VIP restroom', value: 'VIP restroom', checked: false },
 ])
+
+const operatorFilters = reactive(
+  OPERATORS.map((op, i) => ({ id: `op${i + 1}`, label: op.label, value: op.value, checked: true }))
+)
+
+watchEffect(() => {
+  emit('filter-change', {
+    maxPrice: maxPrice.value,
+    ferryTypes: ferryTypes.filter((f) => f.checked).map((f) => f.value),
+    timeSlots: timeSlots.filter((s) => s.checked).map((s) => s.value),
+    amenities: amenityFilters.filter((a) => a.checked).map((a) => a.value),
+    operators: operatorFilters.filter((o) => o.checked).map((o) => o.value),
+  })
+})
 </script>
 
 <style scoped>

@@ -6,7 +6,7 @@
       @go-cart="currentView = 'cart'"
       @go-home="currentView = 'home'"
     />
-    <Home v-if="currentView === 'home'" />
+    <Home v-if="currentView === 'home'" @go-cart="currentView = 'cart'" />
     <Cart v-else-if="currentView === 'cart'" @back="currentView = 'home'" />
   </div>
 </template>

@@ -1,354 +1,135 @@
-# Technical Requirements - ข้อกำหนดทางเทคนิค
+# Technical Requirements
 
-## 📋 Project Overview
+## Tech Stack
 
-ระบบจองตั๋วเรือสมัยใหม่ที่ใช้ Vue.js 3 สำหรับ WordPress เป็น Single Page Application
+| Layer | Technology |
+|-------|-----------|
+| Framework | Vue 3 (Composition API, `<script setup>`) |
+| State Management | Pinia (Setup Store style) |
+| Build Tool | Vite (dev port 5175) |
+| HTTP / Data | Mock data only (`src/services/api.js`, `USE_MOCK=true`) |
+| Styling | Plain CSS (CSS custom properties, scoped per component) |
+| i18n | Custom (`src/i18n.js`) — Thai / English |
+| Navigation | `App.vue` view switcher (`currentView: 'home' | 'cart'`) — ไม่ใช้ Vue Router ในทางปฏิบัติ |
 
----
-
-## 🛠️ Technology Stack
-
-### Frontend
-- **Vue.js 3**: Framework UI
-- **Axios**: HTTP client สำหรับ API calls
-- **Vuex 4**: State management (optional, สำหรับ complex state)
-- **Vue Router**: Navigation (if needed for multiple pages)
-
-### Backend
-- **WordPress**: CMS & Plugin framework
-- **PHP 7.4+**: Server-side programming
-- **WordPress REST API**: API endpoints
-- **MySQL**: Database
-
-### Build Tools (Optional)
-- **Node.js & npm**: Package management
-- **Webpack/Vite**: Module bundler
-- **Babel**: JavaScript transpiler
-- **SASS**: CSS preprocessor
+ไม่มี WordPress, PHP, Axios, Vuex, หรือ backend server
 
 ---
 
-## 📦 Project Dependencies
+## Dependencies (`package.json`)
 
-### PHP Libraries (WordPress)
-- WordPress 5.0+ (for REST API support)
-- WooCommerce (optional, สำหรับ payment processing)
-
-### JavaScript Libraries
 ```json
 {
   "dependencies": {
-    "vue": "^3.3.0",
-    "axios": "^1.4.0",
-    "vuex": "^4.1.0",
-    "date-fns": "^2.30.0"
+    "vue": "^3.x",
+    "pinia": "^2.x"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^4.0.0",
-    "vite": "^4.3.0",
-    "sass": "^1.62.0"
+    "@vitejs/plugin-vue": "^x.x",
+    "vite": "^x.x",
+    "eslint": "^x.x"
   }
 }
 ```
 
 ---
 
-## 🎯 Core Features
+## Components
 
-### 1. Search Form
-- [ ] Dropdown สำหรับเลือก From/To Port
-- [ ] Date picker สำหรับเลือกวันที่
-- [ ] Number input สำหรับจำนวนผู้โดยสาร
-- [ ] Real-time form validation
-- [ ] Search button with loading state
+### Layout Components
 
-### 2. Search Results
-- [ ] Display trip cards in responsive grid
-- [ ] Sort options (by time, price, duration)
-- [ ] Filter options (price range, time range)
-- [ ] Pagination (if many results)
-- [ ] Loading skeleton
-- [ ] Empty state handling
-- [ ] Add to cart button on each card
+| Component | File | หน้าที่ |
+|-----------|------|---------|
+| `TopHeader` | `src/components/TopHeader.vue` | Info bar บนสุด — ซ่อนบน mobile (≤640px) |
+| `MainHeader` | `src/components/MainHeader.vue` | Navigation bar — hamburger menu บน mobile (≤640px) |
 
-### 3. Shopping Cart
-- [ ] Display selected items
-- [ ] Update quantity (±)
-- [ ] Remove item
-- [ ] Calculate subtotal & total
-- [ ] Persist cart data (localStorage)
-- [ ] Proceed to checkout
+### Feature Components
 
-### 4. Payment Integration
-- [ ] Integrate with WooCommerce or custom payment gateway
-- [ ] Order creation
-- [ ] Payment confirmation
+| Component | File | หน้าที่ |
+|-----------|------|---------|
+| `SearchSection` | `src/components/SearchSection.vue` | Search form — one-way/round-trip, ผู้โดยสาร, วันที่ |
+| `TicketCard` | `src/components/TicketCard.vue` | แสดงข้อมูลตั๋ว — 4 tabs, photo carousel |
+| `FilterSidebar` | `src/components/FilterSidebar.vue` | Filter panel — ซ่อนบน mobile (≤1024px) |
+| `MobileBookingBar` | `src/components/MobileBookingBar.vue` | Fixed bottom bar สำหรับ mobile booking flow |
+
+### Views
+
+| View | File | หน้าที่ |
+|------|------|---------|
+| `Home` | `src/views/Home.vue` | Main page — search + results + booking flow |
+| `Cart` | `src/views/Cart.vue` | Cart page — รายการตั๋วที่เลือก + ราคา |
 
 ---
 
-## 🗄️ Database Schema
+## Mobile Breakpoints
 
-### New Tables to Create
-
-#### `wp_ferry_trips`
-```sql
-CREATE TABLE wp_ferry_trips (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  ferry_name VARCHAR(255) NOT NULL,
-  from_port VARCHAR(100) NOT NULL,
-  to_port VARCHAR(100) NOT NULL,
-  departure_time DATETIME NOT NULL,
-  arrival_time DATETIME NOT NULL,
-  available_seats INT NOT NULL,
-  total_seats INT NOT NULL,
-  price DECIMAL(10, 2) NOT NULL,
-  trip_type ENUM('oneway', 'roundtrip') DEFAULT 'oneway',
-  status ENUM('active', 'cancelled') DEFAULT 'active',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-```
-
-#### `wp_ferry_bookings`
-```sql
-CREATE TABLE wp_ferry_bookings (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  order_id BIGINT,
-  trip_id BIGINT NOT NULL,
-  passenger_name VARCHAR(255) NOT NULL,
-  passenger_email VARCHAR(255) NOT NULL,
-  passenger_phone VARCHAR(20),
-  number_of_passengers INT NOT NULL,
-  total_price DECIMAL(10, 2) NOT NULL,
-  status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'pending',
-  booking_ref VARCHAR(50) UNIQUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (trip_id) REFERENCES wp_ferry_trips(id)
-);
-```
-
-#### `wp_ferry_ports`
-```sql
-CREATE TABLE wp_ferry_ports (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  port_code VARCHAR(10) UNIQUE NOT NULL,
-  port_name VARCHAR(255) NOT NULL,
-  city VARCHAR(100),
-  country VARCHAR(100),
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
+| Breakpoint | ผลลัพธ์ |
+|------------|---------|
+| ≤640px | TopHeader ซ่อน, MainHeader แสดง hamburger |
+| ≤768px | SearchSection แสดงเป็น summary card หลัง search; TicketCard layout เปลี่ยนเป็น 2 rows |
+| ≤480px | TicketCard ลด padding, amenities แสดงเป็น pill |
+| ≤1024px | FilterSidebar ซ่อน (Home.vue ใช้ `v-if`) |
 
 ---
 
-## 🔌 REST API Endpoints
+## URL State Sync
 
-### GET Endpoints
+`Home.vue` จัดการ URL ด้วย `window.history.pushState` + `popstate` listener
 
-#### 1. Search Trips
-```
-GET /wp-json/ftbs/v1/trips/search
-Parameters:
-  - from_port: string (required)
-  - to_port: string (required)
-  - departure_date: YYYY-MM-DD (required)
-  - number_of_passengers: number (required)
-  - sort_by: 'price|time|duration' (optional)
-  - page: number (optional)
-  
-Response:
-{
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "ferry_name": "Speed Ferry",
-      "from_port": "Bangkok",
-      "to_port": "Phuket",
-      "departure_time": "2024-04-29T08:00:00",
-      "arrival_time": "2024-04-29T12:30:00",
-      "duration": "4h 30m",
-      "available_seats": 45,
-      "total_seats": 100,
-      "price": 850,
-      "status": "Available"
-    }
-  ],
-  "total": 10,
-  "page": 1,
-  "per_page": 10
-}
-```
-
-#### 2. Get Ports
-```
-GET /wp-json/ftbs/v1/ports
-Parameters: none
-
-Response:
-{
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "port_code": "BKK",
-      "port_name": "Bangkok",
-      "city": "Bangkok",
-      "country": "Thailand"
-    }
-  ]
-}
-```
-
-### POST Endpoints
-
-#### 1. Create Booking
-```
-POST /wp-json/ftbs/v1/bookings
-Body: {
-  "trip_id": 1,
-  "passenger_name": "John Doe",
-  "passenger_email": "john@example.com",
-  "passenger_phone": "08xxxxxxxx",
-  "number_of_passengers": 2,
-  "total_price": 1700
-}
-
-Response:
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "booking_ref": "FTB-20240429-0001",
-    "status": "pending",
-    "order_id": null
-  }
-}
-```
+- `buildQueryFromSearch(params)` — สร้าง URLSearchParams จาก search state
+- `pushSearchToUrl(params)` — เรียก `history.pushState` อัปเดต URL ไม่ reload หน้า
+- `parseSearchFromUrl()` — อ่าน `location.search` และ map location ID → label
+- `popstate` listener — sync URL กลับมายัง form เมื่อกด back/forward
 
 ---
 
-## 🗂️ File Structure
+## CSS Design System
+
+Custom properties ใน `src/style.css`:
+
+| Variable | Value | ใช้ที่ |
+|----------|-------|--------|
+| `--primary` | `#1976D2` | ปุ่มหลัก, สี accent |
+| `--accent` | `#FF6F00` | CTA buttons, ไฮไลต์ |
+| `--text` | `#212121` | ข้อความหลัก |
+| `--text-secondary` | `#757575` | ข้อความรอง |
+| `--border` | `#E0E0E0` | เส้นขอบ |
+| `--bg` | `#F5F5F5` | พื้นหลัง |
+| `--card-bg` | `#FFFFFF` | พื้นหลัง card |
+| `--shadow` | box-shadow value | เงา card |
+
+Font: Roboto (Google Fonts, โหลดใน `index.html`)  
+Icons: Font Awesome 6.4.0 (CDN ใน `index.html`)
+
+---
+
+## i18n
+
+`src/i18n.js` export:
+- `t(key)` — คืน string ตาม locale ปัจจุบัน
+- `setLang(lang)` — เปลี่ยน locale (`'th'` | `'en'`)
+- `i18nState` — reactive state ของ locale ปัจจุบัน
+
+---
+
+## Data Flow
 
 ```
-ferry-ticket-booking-system/
-├── ferry-ticket-booking-system.php   # Main plugin file
-├── README.md
-├── package.json
-├── docs/
-│   ├── system-blueprint.md
-│   ├── technical-requirements.md
-│   └── api-documentation.md
-├── assets/
-│   ├── js/
-│   │   ├── app.js
-│   │   ├── main.js (entry point for Vue)
-│   │   ├── components/
-│   │   │   ├── SearchForm.vue
-│   │   │   ├── SearchResults.vue
-│   │   │   ├── CartSidebar.vue
-│   │   │   └── TripCard.vue
-│   │   ├── store/
-│   │   │   └── index.js (Vuex store)
-│   │   ├── services/
-│   │   │   └── api.js (API calls)
-│   │   └── utils/
-│   │       └── helpers.js
-│   └── css/
-│       ├── main.css
-│       ├── variables.css
-│       └── responsive.css
-├── includes/
-│   ├── class-plugin.php
-│   ├── api/
-│   │   ├── class-api.php
-│   │   ├── class-trips-controller.php
-│   │   ├── class-bookings-controller.php
-│   │   └── class-ports-controller.php
-│   ├── models/
-│   │   ├── class-trip.php
-│   │   ├── class-booking.php
-│   │   └── class-port.php
-│   ├── class-database.php
-│   └── class-activator.php
-├── templates/
-│   └── booking-page.php
-└── vendor/ (if using Composer)
+URL query string
+    ↓ parseSearchFromUrl()
+Home.vue (searchFilters, currentStep)
+    ↓ props/events
+SearchSection.vue → emit('search', params)
+    ↓
+Home.vue handleSearch()
+    ↓ pushSearchToUrl() + loadTickets()
+ticketService.searchTickets() → mockData.js
+    ↓
+tickets[] → TicketCard[] → emit('ticket-select')
+    ↓
+Home.vue handleTicketSelect() → selectedOneway / selectedOutbound / selectedReturn
+    ↓
+MobileBookingBar (mobile) → emit('proceed')
+    ↓
+booking.addToCart() → Cart.vue
 ```
-
----
-
-## 🚀 Development Workflow
-
-### Phase 1: Setup
-- [ ] Create main plugin file
-- [ ] Enqueue Vue.js and dependencies
-- [ ] Create database tables
-
-### Phase 2: Backend API
-- [ ] Create REST API controllers
-- [ ] Implement search endpoint
-- [ ] Implement booking endpoint
-
-### Phase 3: Frontend Components
-- [ ] Build SearchForm component
-- [ ] Build SearchResults component
-- [ ] Build CartSidebar component
-- [ ] Build TripCard component
-
-### Phase 4: Styling & Responsive
-- [ ] Add CSS styling
-- [ ] Make responsive for mobile
-- [ ] Add animations
-
-### Phase 5: Testing & Deployment
-- [ ] Unit tests
-- [ ] Integration tests
-- [ ] User acceptance testing
-- [ ] Production deployment
-
----
-
-## 📊 Performance Considerations
-
-- [ ] Lazy load images
-- [ ] Minify CSS/JS
-- [ ] Cache API responses (client-side)
-- [ ] Pagination for large result sets
-- [ ] Debounce search input
-- [ ] Code splitting (if using webpack)
-
----
-
-## 🔒 Security Checklist
-
-- [ ] CSRF token validation
-- [ ] Input sanitization
-- [ ] Output escaping
-- [ ] User authentication check
-- [ ] Rate limiting on API
-- [ ] SQL injection prevention
-- [ ] XSS prevention
-- [ ] CORS headers
-
----
-
-## 📱 Browser Support
-
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
-- Mobile browsers (iOS Safari, Chrome Mobile)
-
----
-
-## 📝 Documentation
-
-- [ ] API documentation
-- [ ] Component documentation
-- [ ] Installation guide
-- [ ] User guide
-- [ ] Developer guide

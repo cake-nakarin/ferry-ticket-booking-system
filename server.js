@@ -18,32 +18,35 @@ app.use(express.json())
 const mockTickets = [
   {
     id: 1,
-    departure: 'Bangkok',
-    destination: 'Phuket',
-    date: '2026-04-30',
-    time: '09:00',
+    from: 'Bangkok',
+    to: 'Phuket',
+    departDate: '2026-05-11',
+    departTime: '09:00',
+    arriveTime: '17:00',
     price: 500,
-    duration: '8 hours',
+    operator: 'Lomprayah',
     available: 50
   },
   {
     id: 2,
-    departure: 'Bangkok',
-    destination: 'Phuket',
-    date: '2026-04-30',
-    time: '14:00',
+    from: 'Bangkok',
+    to: 'Phuket',
+    departDate: '2026-05-11',
+    departTime: '14:00',
+    arriveTime: '22:00',
     price: 450,
-    duration: '8 hours',
+    operator: 'Seatran Ferry',
     available: 30
   },
   {
     id: 3,
-    departure: 'Phuket',
-    destination: 'Krabi',
-    date: '2026-05-01',
-    time: '10:00',
+    from: 'Phuket',
+    to: 'Krabi',
+    departDate: '2026-05-12',
+    departTime: '10:00',
+    arriveTime: '14:00',
     price: 350,
-    duration: '4 hours',
+    operator: 'Raja Ferry',
     available: 25
   }
 ]
@@ -57,24 +60,24 @@ app.get('/api/tickets', (req, res) => {
 
 // Search tickets
 app.get('/api/tickets/search', (req, res) => {
-  const { departure, destination, date } = req.query
+  const { from, to, departDate } = req.query
   
   let results = mockTickets
   
-  if (departure) {
+  if (from) {
     results = results.filter(t => 
-      t.departure.toLowerCase().includes(departure.toLowerCase())
+      t.from.toLowerCase().includes(from.toLowerCase())
     )
   }
   
-  if (destination) {
+  if (to) {
     results = results.filter(t => 
-      t.destination.toLowerCase().includes(destination.toLowerCase())
+      t.to.toLowerCase().includes(to.toLowerCase())
     )
   }
   
-  if (date) {
-    results = results.filter(t => t.date === date)
+  if (departDate) {
+    results = results.filter(t => t.departDate === departDate)
   }
   
   res.json(results)

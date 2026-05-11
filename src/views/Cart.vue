@@ -21,6 +21,11 @@
                 <span><i class="fas fa-calendar"></i> {{ item.date }}</span>
                 <span><i class="fas fa-clock"></i> {{ item.time }}</span>
               </div>
+              <div v-if="item.priceBreakdown?.length" class="cart-item-breakdown">
+                <span v-for="row in item.priceBreakdown" :key="row.label" class="breakdown-row">
+                  {{ row.label }}: {{ row.amount === 0 ? 'Free' : '฿' + row.amount.toLocaleString() }}
+                </span>
+              </div>
             </div>
             <div class="cart-item-price">฿{{ item.price.toLocaleString() }}</div>
             <button class="remove-btn" @click="removeItem(index)" :title="t('cart.remove')">
@@ -204,6 +209,18 @@ const checkout = () => {
 
 .cart-item-meta i {
   color: var(--primary);
+}
+
+.cart-item-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.breakdown-row {
+  font-size: 11px;
+  color: var(--text-light);
 }
 
 .cart-item-price {

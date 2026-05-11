@@ -88,4 +88,10 @@ import { i18nState, setLang, t } from '../i18n'
   color: var(--primary);
   background: var(--primary-light);
 }
+
+@media (max-width: 640px) {
+  .top-header {
+    display: none;
+  }
+}
 </style>
